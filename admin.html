@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin — [BRAND]</title>
+  <link rel="stylesheet" href="assets/style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo">
+      <span class="nav-logo-name">[BRAND]</span>
+      <span class="nav-logo-sub">Admin</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#" data-view="quotes" class="active">Quotes</a></li>
+      <li><a href="#" data-view="cases">Cases</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-actions"></div>
+  </div>
+</nav>
+
+<main style="padding:40px 0 80px;">
+  <div class="container">
+
+    <!-- ── Quotes Management ── -->
+    <div id="view-quotes">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+        <h2 style="font-size:1.3rem;">Project Briefs</h2>
+        <div style="display:flex;gap:8px;">
+          <select class="form-input" id="status-filter" style="width:auto;padding:8px 12px;">
+            <option value="">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="reviewing">Reviewing</option>
+            <option value="quoted">Quoted</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="production">In Production</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Client</th>
+              <th>Disciplines</th>
+              <th>Deliverable</th>
+              <th>Status</th>
+              <th>Submitted</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="admin-quotes-tbody">
+            <tr><td colspan="7" style="text-align:center;color:var(--color-text-light);padding:40px;">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Quote detail panel -->
+      <div id="quote-panel" style="display:none;margin-top:32px;border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:28px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <h3 style="font-family:var(--font-sans);font-size:1rem;font-weight:600;" id="panel-title">Brief Detail</h3>
+          <button class="btn btn-ghost" id="close-panel">✕ Close</button>
+        </div>
+        <div id="panel-content"></div>
+
+        <!-- Status update -->
+        <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--color-border);">
+          <p style="font-size:0.8rem;font-weight:600;color:var(--color-text-muted);margin-bottom:10px;">UPDATE STATUS</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;" id="status-btns"></div>
+        </div>
+
+        <!-- Reply -->
+        <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--color-border);">
+          <p style="font-size:0.8rem;font-weight:600;color:var(--color-text-muted);margin-bottom:10px;">SEND MESSAGE</p>
+          <div class="thread" id="admin-thread" style="margin-bottom:16px;max-height:300px;overflow-y:auto;"></div>
+          <div style="display:flex;gap:10px;">
+            <textarea class="form-textarea" id="admin-msg" rows="2" placeholder="Reply to client…" style="min-height:60px;flex:1;"></textarea>
+            <button class="btn btn-primary" id="admin-send" style="align-self:flex-end;">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Cases Management ── -->
+    <div id="view-cases" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+        <h2 style="font-size:1.3rem;">Cases</h2>
+        <button class="btn btn-primary btn-sm" id="new-case-btn">+ New Case</button>
+      </div>
+
+      <div class="table-wrap" style="margin-bottom:32px;">
+        <table>
+          <thead>
+            <tr><th>Title</th><th>Category</th><th>Tags</th><th>Published</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="cases-tbody">
+            <tr><td colspan="5" style="text-align:center;color:var(--color-text-light);padding:40px;">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Case form -->
+      <div id="case-form-wrap" style="display:none;border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:28px;">
+        <h3 style="font-family:var(--font-sans);font-size:1rem;font-weight:600;margin-bottom:20px;" id="case-form-title">New Case</h3>
+        <div style="display:flex;flex-direction:column;gap:16px;max-width:640px;">
+          <div class="form-field">
+            <label>Title</label>
+            <input type="text" class="form-input" id="case-title" placeholder="Smart Pet Door"/>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-field">
+              <label>Category</label>
+              <select class="form-input" id="case-category">
+                <option value="iot">IoT</option>
+                <option value="industrial">Industrial</option>
+                <option value="consumer">Consumer</option>
+                <option value="medical">Medical</option>
+                <option value="devboard">Dev Board</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Tags (comma-separated)</label>
+              <input type="text" class="form-input" id="case-tags" placeholder="BLE, IoT, AWS"/>
+            </div>
+          </div>
+          <div class="form-field">
+            <label>Description</label>
+            <textarea class="form-textarea" id="case-desc" rows="4" placeholder="Brief summary shown on the cases page…"></textarea>
+          </div>
+          <div class="form-field">
+            <label>Cover image</label>
+            <div class="upload-zone" id="cover-zone" style="padding:20px;">
+              <p style="margin:0;font-size:0.875rem;">Click to upload cover image</p>
+              <span>JPG, PNG — recommended 1200×750</span>
+              <input type="file" id="cover-input" accept="image/*" style="display:none;"/>
+            </div>
+            <div id="cover-preview" style="display:none;margin-top:8px;"></div>
+          </div>
+          <div class="form-field">
+            <label>Additional photos</label>
+            <div class="upload-zone" id="photos-zone" style="padding:20px;">
+              <p style="margin:0;font-size:0.875rem;">Click to upload photos (multiple)</p>
+              <span>JPG, PNG — up to 10 images</span>
+              <input type="file" id="photos-input" accept="image/*" multiple style="display:none;"/>
+            </div>
+            <div class="file-list" id="photos-list"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:0.875rem;cursor:pointer;">
+              <input type="checkbox" id="case-published"/> Publish immediately
+            </label>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-primary" id="save-case-btn">Save Case</button>
+            <button class="btn btn-outline" id="cancel-case-btn">Cancel</button>
+          </div>
+          <p id="case-form-error" style="color:var(--color-accent);font-size:0.825rem;display:none;"></p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="assets/main.js"></script>
+<script>
+  requireAdmin();
+
+  let currentAdminQuoteId = null;
+  const pendingPhotos = [];
+
+  // Nav tabs
+  document.querySelectorAll('.nav-links [data-view]').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      document.getElementById('view-quotes').style.display = link.dataset.view === 'quotes' ? 'block' : 'none';
+      document.getElementById('view-cases').style.display  = link.dataset.view === 'cases'  ? 'block' : 'none';
+      document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+      link.classList.add('active');
+      if (link.dataset.view === 'cases') loadAdminCases();
+    });
+  });
+
+  // ── QUOTES ──
+
+  async function loadAdminQuotes() {
+    const status = document.getElementById('status-filter').value;
+    try {
+      const data = await QuotesAPI.list(status ? `?status=${status}` : '');
+      const quotes = data?.quotes || [];
+      document.getElementById('admin-quotes-tbody').innerHTML = quotes.length
+        ? quotes.map(q => `
+          <tr style="cursor:pointer;" data-id="${q.id}">
+            <td style="font-size:0.8rem;font-family:monospace;">#${q.id.slice(0,8)}</td>
+            <td><div style="font-weight:500;font-size:0.875rem;">${q.name||q.email}</div><div style="font-size:0.75rem;color:var(--color-text-light);">${q.email}</div></td>
+            <td style="font-size:0.8rem;">${(q.disciplines||[]).join(', ')}</td>
+            <td style="font-size:0.8rem;">${q.deliverable||'—'}</td>
+            <td>${statusBadge(q.status)}</td>
+            <td style="font-size:0.8rem;color:var(--color-text-muted);">${formatDate(q.created_at)}</td>
+            <td><a class="case-link">Open →</a></td>
+          </tr>`).join('')
+        : '<tr><td colspan="7" style="text-align:center;color:var(--color-text-light);padding:40px;">No briefs found.</td></tr>';
+      document.querySelectorAll('#admin-quotes-tbody tr[data-id]').forEach(row =>
+        row.addEventListener('click', () => openAdminQuote(row.dataset.id))
+      );
+    } catch(e) {
+      document.getElementById('admin-quotes-tbody').innerHTML =
+        '<tr><td colspan="7" style="text-align:center;color:var(--color-accent);padding:20px;">Failed to load.</td></tr>';
+    }
+  }
+
+  async function openAdminQuote(id) {
+    currentAdminQuoteId = id;
+    document.getElementById('quote-panel').style.display = 'block';
+    document.getElementById('quote-panel').scrollIntoView({ behavior:'smooth' });
+    try {
+      const [qd, md] = await Promise.all([QuotesAPI.get(id), MessagesAPI.list(id)]);
+      const q = qd.quote;
+      document.getElementById('panel-title').textContent = `Brief #${q.id.slice(0,8)} — ${q.name||q.email}`;
+      document.getElementById('panel-content').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:0.875rem;">
+          <div><p style="font-size:0.75rem;font-weight:600;color:var(--color-text-muted);margin-bottom:4px;">CLIENT</p><p>${q.name} &lt;${q.email}&gt;${q.company?`<br><span style="color:var(--color-text-muted);">${q.company}</span>`:''}</p></div>
+          <div><p style="font-size:0.75rem;font-weight:600;color:var(--color-text-muted);margin-bottom:4px;">SUBMITTED</p><p>${formatDate(q.created_at)}</p></div>
+          <div><p style="font-size:0.75rem;font-weight:600;color:var(--color-text-muted);margin-bottom:4px;">DISCIPLINES</p><div class="case-tags">${(q.disciplines||[]).map(d=>`<span class="tag">${d}</span>`).join('')}</div></div>
+          <div><p style="font-size:0.75rem;font-weight:600;color:var(--color-text-muted);margin-bottom:4px;">DELIVERABLE</p><p>${q.deliverable||'—'}</p></div>
+        </div>
+        <div style="margin-top:16px;padding:16px;background:var(--color-bg-2);border-radius:var(--radius-md);">
+          <p style="font-size:0.75rem;font-weight:600;color:var(--color-text-muted);margin-bottom:6px;">DESCRIPTION</p>
+          <p style="font-size:0.875rem;">${q.description}</p>
+        </div>
+        ${q.files?.length?`<div style="margin-top:12px;"><p style="font-size:0.75rem;font-weight:600;color:var(--color-text-muted);margin-bottom:6px;">FILES</p><div class="file-list">${q.files.map(f=>`<div class="file-item"><span class="file-item-name">📄 ${f.name}</span><span class="file-item-size">${formatSize(f.size)}</span></div>`).join('')}</div></div>`:''}
+      `;
+
+      // Status buttons
+      const statuses = ['pending','reviewing','quoted','confirmed','production','completed','cancelled'];
+      document.getElementById('status-btns').innerHTML = statuses.map(s =>
+        `<button class="btn btn-sm ${s===q.status?'btn-primary':'btn-outline'}" data-status="${s}">${STATUS_LABELS[s]}</button>`
+      ).join('');
+      document.querySelectorAll('#status-btns button').forEach(btn =>
+        btn.addEventListener('click', async () => {
+          await QuotesAPI.updateStatus(id, btn.dataset.status);
+          showToast('Status updated');
+          loadAdminQuotes();
+          openAdminQuote(id);
+        })
+      );
+
+      // Messages
+      const msgs = md?.messages || [];
+      document.getElementById('admin-thread').innerHTML = msgs.length
+        ? msgs.map(m => `
+          <div class="message ${m.role==='admin'?'from-admin':''}">
+            <div class="msg-avatar">${m.role==='admin'?'⚙':(q.name?.[0]||'?')}</div>
+            <div><div class="msg-bubble">${m.content}</div><p class="msg-time">${formatDate(m.created_at)}</p></div>
+          </div>`).join('')
+        : '<p style="color:var(--color-text-light);font-size:0.875rem;">No messages yet.</p>';
+    } catch(e) {
+      document.getElementById('panel-content').innerHTML = '<p style="color:var(--color-accent);">Failed to load brief.</p>';
+    }
+  }
+
+  document.getElementById('close-panel').addEventListener('click', () => {
+    document.getElementById('quote-panel').style.display = 'none';
+  });
+
+  document.getElementById('admin-send').addEventListener('click', async () => {
+    const content = document.getElementById('admin-msg').value.trim();
+    if (!content || !currentAdminQuoteId) return;
+    try {
+      await MessagesAPI.send(currentAdminQuoteId, content);
+      document.getElementById('admin-msg').value = '';
+      const md = await MessagesAPI.list(currentAdminQuoteId);
+      // re-render thread inline
+      openAdminQuote(currentAdminQuoteId);
+      showToast('Message sent');
+    } catch(e) { showToast('Failed to send', 'error'); }
+  });
+
+  document.getElementById('status-filter').addEventListener('change', loadAdminQuotes);
+
+  // ── CASES ──
+
+  async function loadAdminCases() {
+    try {
+      const data = await CasesAPI.list();
+      const cases = data?.cases || [];
+      document.getElementById('cases-tbody').innerHTML = cases.length
+        ? cases.map(c => `
+          <tr>
+            <td style="font-weight:500;font-size:0.875rem;">${c.title}</td>
+            <td><span class="tag">${c.category}</span></td>
+            <td style="font-size:0.8rem;">${(c.tags||[]).join(', ')}</td>
+            <td>${c.published ? '<span style="color:var(--color-text-success);">✓ Live</span>' : '<span style="color:var(--color-text-muted);">Draft</span>'}</td>
+            <td style="display:flex;gap:8px;">
+              <button class="btn btn-sm btn-outline" data-edit="${c.id}">Edit</button>
+              <button class="btn btn-sm" style="color:var(--color-accent);border-color:var(--color-accent);" data-delete="${c.id}">Delete</button>
+            </td>
+          </tr>`).join('')
+        : '<tr><td colspan="5" style="text-align:center;color:var(--color-text-light);padding:40px;">No cases yet. Create your first one.</td></tr>';
+    } catch(_) {}
+  }
+
+  // New case
+  document.getElementById('new-case-btn').addEventListener('click', () => {
+    document.getElementById('case-form-title').textContent = 'New Case';
+    document.getElementById('case-form-wrap').style.display = 'block';
+    document.getElementById('case-form-wrap').scrollIntoView({ behavior:'smooth' });
+  });
+  document.getElementById('cancel-case-btn').addEventListener('click', () => {
+    document.getElementById('case-form-wrap').style.display = 'none';
+  });
+
+  // Cover image
+  document.getElementById('cover-zone').addEventListener('click', () => document.getElementById('cover-input').click());
+  document.getElementById('cover-input').addEventListener('change', function() {
+    if (!this.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('cover-preview').style.display = 'block';
+      document.getElementById('cover-preview').innerHTML = `<img src="${e.target.result}" style="max-height:160px;border-radius:var(--radius-md);border:1px solid var(--color-border);"/>`;
+    };
+    reader.readAsDataURL(this.files[0]);
+  });
+
+  // Additional photos
+  document.getElementById('photos-zone').addEventListener('click', () => document.getElementById('photos-input').click());
+  document.getElementById('photos-input').addEventListener('change', function() {
+    [...this.files].forEach(f => pendingPhotos.push(f));
+    document.getElementById('photos-list').innerHTML = pendingPhotos.map((f,i) => `
+      <div class="file-item">
+        <span class="file-item-name">🖼 ${f.name}</span>
+        <span class="file-item-size">${formatSize(f.size)}</span>
+        <button class="file-item-remove" data-i="${i}">✕</button>
+      </div>`).join('');
+  });
+
+  // Save case
+  document.getElementById('save-case-btn').addEventListener('click', async () => {
+    const title     = document.getElementById('case-title').value.trim();
+    const category  = document.getElementById('case-category').value;
+    const tags      = document.getElementById('case-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+    const desc      = document.getElementById('case-desc').value.trim();
+    const published = document.getElementById('case-published').checked;
+    const errEl     = document.getElementById('case-form-error');
+    if (!title || !desc) { errEl.textContent = 'Title and description are required.'; errEl.style.display='block'; return; }
+
+    document.getElementById('save-case-btn').textContent = 'Uploading images…';
+    try {
+      let cover_image = '';
+      const coverFile = document.getElementById('cover-input').files[0];
+      if (coverFile) {
+        const r = await UploadAPI.upload(coverFile, 'cases');
+        cover_image = r.key;
+      }
+      const images = [];
+      for (const f of pendingPhotos) {
+        const r = await UploadAPI.upload(f, 'cases');
+        images.push(r.key);
+      }
+      await CasesAPI.create({ title, slug: slugify(title), category, tags, description: desc, cover_image, images, published });
+      document.getElementById('case-form-wrap').style.display = 'none';
+      showToast('Case saved!');
+      loadAdminCases();
+    } catch(e) {
+      errEl.textContent = e.message || 'Failed to save case.';
+      errEl.style.display = 'block';
+    }
+    document.getElementById('save-case-btn').textContent = 'Save Case';
+  });
+
+  loadAdminQuotes();
+</script>
+</body>
+</html>
