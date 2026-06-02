@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Submit a Brief — [BRAND]</title>
+  <link rel="stylesheet" href="assets/style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo">
+      <span class="nav-logo-name">[BRAND]</span>
+      <span class="nav-logo-sub">System Solutions</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it works</a></li>
+      <li><a href="cases.html">Cases</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="https://forum.[BRAND].com" target="_blank">Forum</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-actions"></div>
+    <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="nav-drawer" id="nav-drawer">
+  <div class="nav-drawer-overlay" id="drawer-overlay"></div>
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="drawer-close">✕</button>
+    <a href="/">Home</a>
+    <a href="cases.html">Cases</a>
+    <a href="about.html">About</a>
+    <a href="https://forum.[BRAND].com" target="_blank">Forum</a>
+  </div>
+</div>
+
+<main>
+  <section style="padding:52px 0 32px;border-bottom:1px solid var(--color-border);">
+    <div class="container">
+      <p class="eyebrow mb-8">Get a quote</p>
+      <h1 style="font-size:clamp(1.6rem,4vw,2.2rem);margin-bottom:10px;">Submit your project brief.</h1>
+      <p style="max-width:520px;">Tell us what you need built. We'll review your brief and get back with a custom quote within 24 hours.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container" style="max-width:800px;">
+
+      <!-- Login gate -->
+      <div id="login-gate" style="display:none;text-align:center;padding:60px 20px;">
+        <p style="font-size:1.1rem;font-weight:600;color:var(--color-text);margin-bottom:8px;">Sign in to submit your brief</p>
+        <p style="margin-bottom:24px;">We need your contact details to follow up on your project.</p>
+        <div style="display:flex;gap:12px;justify-content:center;">
+          <a href="/login.html?redirect=/quote.html" class="btn btn-primary btn-lg">Sign in</a>
+          <a href="/login.html?redirect=/quote.html" class="btn btn-outline btn-lg">Create account</a>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div id="quote-form">
+
+        <div class="form-section">
+
+          <!-- Step 1 -->
+          <div class="form-step">
+            <span class="form-step-label">Step 1 — Disciplines needed <span style="color:var(--color-accent);">*</span></span>
+            <div class="discipline-grid" id="discipline-grid">
+              <div class="discipline-card" data-value="hardware">
+                <div class="check"></div>
+                <h4>⚡ Hardware</h4>
+                <p>PCB · PCBA · circuits</p>
+              </div>
+              <div class="discipline-card" data-value="firmware">
+                <div class="check"></div>
+                <h4>💾 Firmware</h4>
+                <p>Embedded · RTOS · BSP</p>
+              </div>
+              <div class="discipline-card" data-value="software">
+                <div class="check"></div>
+                <h4>☁ Software</h4>
+                <p>App · Cloud · API</p>
+              </div>
+              <div class="discipline-card" data-value="mechanical">
+                <div class="check"></div>
+                <h4>🔩 Mechanical</h4>
+                <p>Structure · Enclosure</p>
+              </div>
+              <div class="discipline-card" data-value="id">
+                <div class="check"></div>
+                <h4>🎨 ID Design</h4>
+                <p>Industrial design<br><small style="color:var(--color-accent);font-size:0.7rem;">(via partner)</small></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="form-step">
+            <span class="form-step-label">Step 2 — Expected deliverable</span>
+            <div class="deliverable-grid" id="deliverable-grid">
+              <button class="deliverable-btn" data-value="pcba">PCBA only</button>
+              <button class="deliverable-btn" data-value="product">Finished product</button>
+              <button class="deliverable-btn" data-value="prototype">Prototype first</button>
+              <button class="deliverable-btn" data-value="unsure">Not sure yet</button>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="form-step">
+            <span class="form-step-label">Step 3 — Describe your project <span style="color:var(--color-accent);">*</span></span>
+            <textarea
+              class="form-textarea"
+              id="desc"
+              maxlength="2000"
+              rows="6"
+              placeholder='e.g. "We need a battery-powered IoT sensor that reads temperature and humidity, connects via BLE to a mobile app, and runs for 6 months on a single charge. Target volume: 500 units/year. Timeline: prototype in 3 months."'
+            ></textarea>
+            <p class="char-count"><span id="char-count">0</span> / 2000</p>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="form-step">
+            <span class="form-step-label">Step 4 — Attach files <span style="color:var(--color-text-light);font-weight:400;">(optional)</span></span>
+            <div class="upload-zone" id="upload-zone">
+              <div class="upload-icon">📎</div>
+              <p>Drop files here or <span class="upload-browse" id="upload-browse">browse</span></p>
+              <span>PDF, images, schematics, BOM, spec sheets — up to 20 MB each</span>
+              <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.xlsx,.xls,.csv,.zip,.doc,.docx" style="display:none;"/>
+            </div>
+            <div class="file-list" id="file-list"></div>
+          </div>
+
+          <!-- Step 5: Contact -->
+          <div class="form-step" style="margin-bottom:16px;">
+            <span class="form-step-label">Step 5 — Your details</span>
+            <div class="form-row">
+              <div class="form-field">
+                <label for="contact-name">Full name</label>
+                <input type="text" id="contact-name" class="form-input" placeholder="Jane Smith"/>
+              </div>
+              <div class="form-field">
+                <label for="contact-email">Work email</label>
+                <input type="email" id="contact-email" class="form-input" placeholder="jane@company.com"/>
+              </div>
+              <div class="form-field">
+                <label for="contact-company">Company <span style="color:var(--color-text-light);font-weight:400;">(optional)</span></label>
+                <input type="text" id="contact-company" class="form-input" placeholder="Acme Inc."/>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-top:16px;border-top:1px solid var(--color-border);">
+            <p class="form-note" style="text-align:left;margin:0;">
+              We respond within 24 hours.<br>No spam, no sales calls — engineers only.
+            </p>
+            <button class="btn btn-primary btn-lg" id="submit-btn">Send Brief →</button>
+          </div>
+
+          <p id="form-error" style="color:var(--color-accent);font-size:0.825rem;margin-top:10px;display:none;"></p>
+
+        </div>
+      </div>
+
+      <!-- Success state -->
+      <div id="success-state" style="display:none;text-align:center;padding:60px 20px;">
+        <div style="font-size:3rem;margin-bottom:16px;">✅</div>
+        <h2 style="margin-bottom:10px;">Brief received!</h2>
+        <p style="margin-bottom:28px;">We'll review your project and get back to you within 24 hours. You can track the status in your dashboard.</p>
+        <div style="display:flex;gap:12px;justify-content:center;">
+          <a href="/dashboard.html" class="btn btn-primary">Go to Dashboard</a>
+          <a href="/" class="btn btn-outline">Back to Home</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<script src="assets/main.js"></script>
+<script>
+  const pendingFiles = [];
+
+  // Restore pre-filled data from homepage form
+  const params = new URLSearchParams(location.search);
+  if (params.get('disciplines')) {
+    params.get('disciplines').split(',').forEach(v => {
+      document.querySelector(`.discipline-card[data-value="${v}"]`)?.classList.add('selected');
+    });
+  }
+  if (params.get('deliverable')) {
+    document.querySelector(`.deliverable-btn[data-value="${params.get('deliverable')}"]`)?.classList.add('selected');
+  }
+  if (params.get('description')) {
+    document.getElementById('desc').value = params.get('description');
+    document.getElementById('char-count').textContent = params.get('description').length;
+  }
+
+  // Auth gate
+  function checkAuth() {
+    if (!Auth.isLoggedIn()) {
+      document.getElementById('quote-form').style.display = 'none';
+      document.getElementById('login-gate').style.display = 'block';
+    } else {
+      const user = Auth.getUser();
+      if (user) {
+        document.getElementById('contact-name').value  = user.name  || '';
+        document.getElementById('contact-email').value = user.email || '';
+      }
+    }
+  }
+  checkAuth();
+
+  // Discipline toggle
+  document.querySelectorAll('.discipline-card').forEach(c =>
+    c.addEventListener('click', () => c.classList.toggle('selected'))
+  );
+
+  // Deliverable toggle
+  document.querySelectorAll('.deliverable-btn').forEach(btn =>
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.deliverable-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    })
+  );
+
+  // Char count
+  document.getElementById('desc').addEventListener('input', function() {
+    document.getElementById('char-count').textContent = this.value.length;
+  });
+
+  // File upload
+  const zone     = document.getElementById('upload-zone');
+  const fileInput= document.getElementById('file-input');
+  const fileList = document.getElementById('file-list');
+
+  document.getElementById('upload-browse').addEventListener('click', () => fileInput.click());
+  zone.addEventListener('click', () => fileInput.click());
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    addFiles([...e.dataTransfer.files]);
+  });
+  fileInput.addEventListener('change', () => addFiles([...fileInput.files]));
+
+  function addFiles(files) {
+    files.forEach(f => {
+      if (f.size > 20 * 1024 * 1024) { showToast(`${f.name} exceeds 20 MB limit`, 'error'); return; }
+      if (pendingFiles.find(p => p.name === f.name)) return;
+      pendingFiles.push(f);
+      renderFileList();
+    });
+  }
+
+  function renderFileList() {
+    fileList.innerHTML = pendingFiles.map((f, i) => `
+      <div class="file-item">
+        <span class="file-item-name">📄 ${f.name}</span>
+        <span class="file-item-size">${formatSize(f.size)}</span>
+        <button class="file-item-remove" data-i="${i}" title="Remove">✕</button>
+      </div>
+    `).join('');
+    fileList.querySelectorAll('.file-item-remove').forEach(btn =>
+      btn.addEventListener('click', () => { pendingFiles.splice(+btn.dataset.i, 1); renderFileList(); })
+    );
+  }
+
+  // Submit
+  document.getElementById('submit-btn').addEventListener('click', async () => {
+    const errEl = document.getElementById('form-error');
+    errEl.style.display = 'none';
+
+    const disciplines = [...document.querySelectorAll('.discipline-card.selected')].map(c => c.dataset.value);
+    const deliverable = document.querySelector('.deliverable-btn.selected')?.dataset.value || 'unsure';
+    const description = document.getElementById('desc').value.trim();
+    const name        = document.getElementById('contact-name').value.trim();
+    const email       = document.getElementById('contact-email').value.trim();
+    const company     = document.getElementById('contact-company').value.trim();
+
+    if (!disciplines.length) { errEl.textContent = 'Please select at least one discipline.'; errEl.style.display='block'; return; }
+    if (!description)        { errEl.textContent = 'Please describe your project.'; errEl.style.display='block'; return; }
+    if (!name || !email)     { errEl.textContent = 'Please fill in your name and email.'; errEl.style.display='block'; return; }
+
+    const btn = document.getElementById('submit-btn');
+    btn.textContent = 'Uploading files…';
+    btn.disabled = true;
+
+    try {
+      // Upload files to R2
+      const uploadedFiles = [];
+      for (const file of pendingFiles) {
+        const result = await UploadAPI.upload(file, 'quotes');
+        uploadedFiles.push(result);
+      }
+
+      btn.textContent = 'Sending brief…';
+
+      await QuotesAPI.submit({ disciplines, deliverable, description, files: uploadedFiles, name, email, company });
+
+      document.getElementById('quote-form').style.display = 'none';
+      document.getElementById('success-state').style.display = 'block';
+    } catch(e) {
+      errEl.textContent = e.message || 'Something went wrong. Please try again.';
+      errEl.style.display = 'block';
+      btn.textContent = 'Send Brief →';
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
