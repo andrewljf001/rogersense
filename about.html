@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About — [BRAND]</title>
+  <link rel="stylesheet" href="assets/style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo">
+      <span class="nav-logo-name">[BRAND]</span>
+      <span class="nav-logo-sub">System Solutions</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it works</a></li>
+      <li><a href="cases.html">Cases</a></li>
+      <li><a href="about.html" class="active">About</a></li>
+      <li><a href="https://forum.[BRAND].com" target="_blank">Forum</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-actions"></div>
+    <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="nav-drawer" id="nav-drawer">
+  <div class="nav-drawer-overlay" id="drawer-overlay"></div>
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="drawer-close">✕</button>
+    <a href="/">Home</a><a href="cases.html">Cases</a><a href="about.html">About</a>
+    <a href="https://forum.[BRAND].com" target="_blank">Forum</a>
+  </div>
+</div>
+
+<section style="padding:60px 0 48px;border-bottom:1px solid var(--color-border);">
+  <div class="container" style="max-width:700px;">
+    <p class="eyebrow mb-16">About us</p>
+    <h1 style="margin-bottom:20px;">We build the whole product.</h1>
+    <p style="font-size:1.05rem;line-height:1.8;">
+      We're a small team of engineers who got tired of watching good product ideas fall apart because of handoffs — between hardware and software teams, between designers and manufacturers, between whoever thought of the idea and whoever was supposed to build it.
+    </p>
+    <p style="margin-top:16px;">
+      So we built a practice that handles the whole thing. You bring the problem. We handle the architecture, the hardware, the firmware, the mechanics — and we deliver something that actually works in the real world.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;max-width:900px;">
+
+      <div>
+        <p class="eyebrow mb-16">What we do</p>
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          <div style="padding:20px 0;border-bottom:1px solid var(--color-border);">
+            <h3 style="font-family:var(--font-sans);font-size:1rem;font-weight:600;margin-bottom:6px;">⚡ Hardware &amp; PCBA</h3>
+            <p style="font-size:0.875rem;">System architecture, schematic capture, PCB layout, component sourcing, prototype assembly, and volume production. We own the full hardware stack.</p>
+          </div>
+          <div style="padding:20px 0;border-bottom:1px solid var(--color-border);">
+            <h3 style="font-family:var(--font-sans);font-size:1rem;font-weight:600;margin-bottom:6px;">💾 Firmware &amp; Software</h3>
+            <p style="font-size:0.875rem;">Embedded firmware, BSP, RTOS, IoT connectivity, mobile apps, cloud backends. We write the code that makes the hardware useful.</p>
+          </div>
+          <div style="padding:20px 0;border-bottom:1px solid var(--color-border);">
+            <h3 style="font-family:var(--font-sans);font-size:1rem;font-weight:600;margin-bottom:6px;">🔩 Mechanical Design</h3>
+            <p style="font-size:0.875rem;">Enclosures, structural design, thermal management, DFM review, tooling coordination. Products need to survive the real world.</p>
+          </div>
+          <div style="padding:20px 0;">
+            <h3 style="font-family:var(--font-sans);font-size:1rem;font-weight:600;margin-bottom:6px;color:var(--color-text-muted);">🎨 ID Design <span style="font-weight:400;font-size:0.8rem;">(via partner)</span></h3>
+            <p style="font-size:0.875rem;">Industrial design, CMF, rendering. We coordinate with trusted ID partners when you need it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p class="eyebrow mb-16">How we work</p>
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          <div style="padding:20px;background:var(--color-bg-2);border-radius:var(--radius-lg);">
+            <h3 style="font-family:var(--font-sans);font-size:0.95rem;font-weight:600;margin-bottom:8px;">No fixed pricing</h3>
+            <p style="font-size:0.875rem;">Every project is different. You describe what you need, we scope it properly and send a real quote. No price lists, no surprises.</p>
+          </div>
+          <div style="padding:20px;background:var(--color-bg-2);border-radius:var(--radius-lg);">
+            <h3 style="font-family:var(--font-sans);font-size:0.95rem;font-weight:600;margin-bottom:8px;">Architecture first</h3>
+            <p style="font-size:0.875rem;">We think about the whole system before touching a schematic. Most expensive mistakes happen in architecture, not manufacturing.</p>
+          </div>
+          <div style="padding:20px;background:var(--color-bg-2);border-radius:var(--radius-lg);">
+            <h3 style="font-family:var(--font-sans);font-size:0.95rem;font-weight:600;margin-bottom:8px;">Direct communication</h3>
+            <p style="font-size:0.875rem;">You deal with the engineers, not account managers. Questions get real answers, not status updates.</p>
+          </div>
+          <div style="padding:20px;background:var(--color-bg-2);border-radius:var(--radius-lg);">
+            <h3 style="font-family:var(--font-sans);font-size:0.95rem;font-weight:600;margin-bottom:8px;">Delivered, not handed off</h3>
+            <p style="font-size:0.875rem;">We stay involved through production. A working prototype is not the finish line — a reliable, manufacturable product is.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--color-bg-dark);padding:64px 0;">
+  <div class="container" style="max-width:600px;text-align:center;">
+    <h2 style="color:var(--color-bg);margin-bottom:12px;">Ready to start?</h2>
+    <p style="color:#888;margin-bottom:28px;">Describe your project — we'll get back within 24 hours with a scope and quote.</p>
+    <a href="quote.html" class="btn btn-accent btn-lg">Submit Your Brief →</a>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <p class="footer-brand-name">[BRAND]</p>
+        <p class="footer-brand-desc">End-to-end product engineering.<br>Hardware · Firmware · Mechanical.</p>
+      </div>
+      <div class="footer-col"><h4>Company</h4><ul>
+        <li><a href="cases.html">Cases</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="quote.html">Get a Quote</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>Community</h4><ul>
+        <li><a href="https://forum.[BRAND].com" target="_blank">Forum</a></li>
+        <li><a href="cases.html?category=devboard">Dev Boards</a></li>
+      </ul></div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 [BRAND].</span>
+      <span>Custom engineering · No fixed pricing</span>
+    </div>
+  </div>
+</footer>
+<script src="assets/main.js"></script>
+</body>
+</html>
