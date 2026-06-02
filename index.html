@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="You describe the problem. We architect the solution. Hardware · Firmware · Mechanical — delivered as PCBA or finished product."/>
+  <title>[BRAND] — System Architecture & Product Delivery</title>
+  <link rel="stylesheet" href="assets/style.css"/>
+</head>
+<body>
+
+<!-- ── Navigation ── -->
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo">
+      <span class="nav-logo-name">[BRAND]</span>
+      <span class="nav-logo-sub">System Solutions</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#how-it-works">How it works</a></li>
+      <li><a href="cases.html">Cases</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="https://forum.[BRAND].com" target="_blank">Forum</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-actions">
+      <!-- Rendered by main.js -->
+      <a href="/login.html" class="btn btn-outline btn-sm">Sign in</a>
+      <a href="/quote.html" class="btn btn-primary btn-sm">Submit Brief →</a>
+    </div>
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile drawer -->
+<div class="nav-drawer" id="nav-drawer">
+  <div class="nav-drawer-overlay" id="drawer-overlay"></div>
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="drawer-close">✕</button>
+    <a href="#how-it-works">How it works</a>
+    <a href="cases.html">Cases</a>
+    <a href="about.html">About</a>
+    <a href="https://forum.[BRAND].com" target="_blank">Forum</a>
+    <a href="/login.html">Sign in</a>
+    <a href="/quote.html" class="btn btn-primary" style="margin-top:12px;justify-content:center;">Submit Brief →</a>
+  </div>
+</div>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="container">
+    <p class="eyebrow hero-label">End-to-end product engineering</p>
+    <h1>You describe the problem.<br>We architect the solution.</h1>
+    <p class="hero-desc">Hardware · Firmware · Mechanical — delivered as PCBA or finished product. One team, no handoffs.</p>
+    <hr class="hero-rule"/>
+    <p class="hero-desc" style="font-size:0.9rem;">From system architecture to mass production. Tell us what you need built and we'll get back with a custom quote within 24 hours.</p>
+    <div class="hero-actions" style="margin-top:28px;">
+      <a href="/quote.html" class="btn btn-primary btn-lg">Submit Your Brief →</a>
+      <a href="cases.html" class="btn btn-outline btn-lg">See Our Work</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── How it works ── -->
+<section class="section" id="how-it-works">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;">
+      <div>
+        <p class="eyebrow mb-16">How it works</p>
+        <h2 style="margin-bottom:32px;">Simple process,<br>serious engineering.</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h3>Describe your project</h3>
+              <p>Fill in a brief — what it should do, key constraints, expected volume, timeline. Takes 5 minutes.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h3>We evaluate &amp; quote</h3>
+              <p>Our engineers review the scope and send a custom quote. No fixed rates — every project is different.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h3>We build &amp; deliver</h3>
+              <p>Architecture → prototype → PCBA or finished product. You stay in the loop at every stage.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p class="eyebrow mb-16">What we do</p>
+        <div class="services-grid">
+          <div class="service-card">
+            <div class="service-icon">⚡</div>
+            <h3>Hardware</h3>
+            <p>System architecture, schematic, PCB, PCBA — prototype to mass production.</p>
+            <span class="service-tag">In-house</span>
+          </div>
+          <div class="service-card">
+            <div class="service-icon">💾</div>
+            <h3>Firmware &amp; Software</h3>
+            <p>Embedded firmware, RTOS, IoT connectivity, cloud integration, mobile apps.</p>
+            <span class="service-tag">In-house</span>
+          </div>
+          <div class="service-card">
+            <div class="service-icon">🔩</div>
+            <h3>Mechanical</h3>
+            <p>Structural design, enclosures, DFM, tooling support — from CAD to production.</p>
+            <span class="service-tag">In-house</span>
+          </div>
+          <div class="service-card muted">
+            <div class="service-icon">🎨</div>
+            <h3>Industrial Design</h3>
+            <p>CMF, rendering, form factor — coordinated through trusted ID partners.</p>
+            <span class="service-tag muted">Via partner</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- ── Inline Quote Form (simplified) ── -->
+<section class="section" id="brief">
+  <div class="container">
+    <div style="max-width:760px;margin:0 auto;">
+      <p class="eyebrow mb-16">Start here</p>
+      <h2 style="margin-bottom:8px;">Tell us what you need.</h2>
+      <p style="margin-bottom:32px;">Select the disciplines involved and describe your project. We'll respond within 24 hours.</p>
+
+      <div class="form-section" id="inline-form">
+
+        <!-- Step 1: Disciplines -->
+        <div class="form-step">
+          <span class="form-step-label">Step 1 — Disciplines needed</span>
+          <div class="discipline-grid" id="discipline-grid">
+            <div class="discipline-card" data-value="hardware">
+              <div class="check"></div>
+              <h4>⚡ Hardware</h4>
+              <p>PCB · PCBA · circuits</p>
+            </div>
+            <div class="discipline-card" data-value="firmware">
+              <div class="check"></div>
+              <h4>💾 Firmware</h4>
+              <p>Embedded · RTOS · BSP</p>
+            </div>
+            <div class="discipline-card" data-value="software">
+              <div class="check"></div>
+              <h4>☁ Software</h4>
+              <p>App · Cloud · API</p>
+            </div>
+            <div class="discipline-card" data-value="mechanical">
+              <div class="check"></div>
+              <h4>🔩 Mechanical</h4>
+              <p>Structure · Enclosure</p>
+            </div>
+            <div class="discipline-card" data-value="id">
+              <div class="check"></div>
+              <h4>🎨 ID Design</h4>
+              <p>Industrial design <small style="color:var(--color-accent);font-size:0.7rem;">(via partner)</small></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Deliverable -->
+        <div class="form-step">
+          <span class="form-step-label">Step 2 — Expected deliverable</span>
+          <div class="deliverable-grid" id="deliverable-grid">
+            <button class="deliverable-btn" data-value="pcba">PCBA only</button>
+            <button class="deliverable-btn" data-value="product">Finished product</button>
+            <button class="deliverable-btn" data-value="prototype">Prototype first</button>
+            <button class="deliverable-btn" data-value="unsure">Not sure yet</button>
+          </div>
+        </div>
+
+        <!-- Step 3: Description -->
+        <div class="form-step">
+          <span class="form-step-label">Step 3 — Describe your project</span>
+          <textarea
+            class="form-textarea"
+            id="inline-desc"
+            maxlength="1000"
+            placeholder="e.g. &quot;We need a battery-powered IoT sensor that reads temperature and humidity, connects via BLE to a mobile app, and runs for 6 months on a single charge. Target volume: 500 units/year. Timeline: prototype in 3 months.&quot;"
+          ></textarea>
+          <p class="char-count"><span id="inline-count">0</span> / 1000</p>
+        </div>
+
+        <!-- CTA -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+          <p class="form-note" style="text-align:left;margin:0;">
+            You'll be asked to sign in before submitting.<br>
+            We respond within 24 hours — engineers only, no sales calls.
+          </p>
+          <button class="btn btn-primary btn-lg" id="inline-submit">Continue →</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- ── Cases preview ── -->
+<section class="section">
+  <div class="container">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:28px;">
+      <div>
+        <p class="eyebrow mb-8">Recent work</p>
+        <h2>Selected cases.</h2>
+      </div>
+      <a href="cases.html" class="btn btn-ghost">View all →</a>
+    </div>
+    <div class="cases-grid" id="cases-preview">
+      <!-- Placeholder cards shown until API loads -->
+      <div class="case-card">
+        <div class="case-thumb"><div class="case-thumb-placeholder">Loading…</div></div>
+        <div class="case-body">
+          <div class="case-tags"><span class="tag">IoT</span><span class="tag">BLE</span></div>
+          <h3>Smart Pet Door</h3>
+          <p>Automated BLE-enabled pet door with mobile app, power management, and AWS cloud integration.</p>
+          <a href="#" class="case-link">View case →</a>
+        </div>
+      </div>
+      <div class="case-card">
+        <div class="case-thumb"><div class="case-thumb-placeholder">Loading…</div></div>
+        <div class="case-body">
+          <div class="case-tags"><span class="tag">Medical</span><span class="tag">AWS</span></div>
+          <h3>Remote Medical Hub</h3>
+          <p>Real-time location service IoT product for medical devices with Azure cloud integration.</p>
+          <a href="#" class="case-link">View case →</a>
+        </div>
+      </div>
+      <div class="case-card">
+        <div class="case-thumb"><div class="case-thumb-placeholder">Loading…</div></div>
+        <div class="case-body">
+          <div class="case-tags"><span class="tag">Industrial</span><span class="tag">Solar</span></div>
+          <h3>Solar Pump Controller</h3>
+          <p>3-phase variable frequency drive optimised for direct solar DC input for remote pumping.</p>
+          <a href="#" class="case-link">View case →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- ── Dev Boards ── -->
+<section class="section">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;">
+      <div>
+        <p class="eyebrow mb-16">For developers</p>
+        <h2>Build on our platform.</h2>
+        <p style="margin:16px 0 24px;">Dev boards, SDK, and a community of engineers. Start hacking in minutes — and join the conversation in our forum.</p>
+        <div class="hero-actions">
+          <a href="cases.html?category=devboard" class="btn btn-outline">Explore Dev Boards</a>
+          <a href="https://forum.[BRAND].com" target="_blank" class="btn btn-ghost">Join the Forum →</a>
+        </div>
+      </div>
+      <div style="background:var(--color-bg-2);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:32px;display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;border-radius:var(--radius-md);background:var(--color-bg);border:1px solid var(--color-border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🛠</div>
+          <div>
+            <p style="font-weight:600;font-size:0.9rem;color:var(--color-text);margin:0;">Open Dev Boards</p>
+            <p style="font-size:0.8rem;margin:0;">Our hardware, your ideas</p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;border-radius:var(--radius-md);background:var(--color-bg);border:1px solid var(--color-border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📦</div>
+          <div>
+            <p style="font-weight:600;font-size:0.9rem;color:var(--color-text);margin:0;">SDK &amp; Example Code</p>
+            <p style="font-size:0.8rem;margin:0;">Get running in minutes</p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;border-radius:var(--radius-md);background:var(--color-bg);border:1px solid var(--color-border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">💬</div>
+          <div>
+            <p style="font-weight:600;font-size:0.9rem;color:var(--color-text);margin:0;">Active Community Forum</p>
+            <p style="font-size:0.8rem;margin:0;">Share projects, ask questions</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <p class="footer-brand-name">[BRAND]</p>
+        <p class="footer-brand-desc">End-to-end product engineering.<br>Hardware · Firmware · Mechanical.<br>Custom quote, no fixed pricing.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Services</h4>
+        <ul>
+          <li><a href="/quote.html">Hardware Design</a></li>
+          <li><a href="/quote.html">Firmware &amp; Software</a></li>
+          <li><a href="/quote.html">Mechanical Design</a></li>
+          <li><a href="/quote.html">ID Design (Partner)</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="cases.html">Cases</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="quote.html">Get a Quote</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Community</h4>
+        <ul>
+          <li><a href="https://forum.[BRAND].com" target="_blank">Forum</a></li>
+          <li><a href="cases.html?category=devboard">Dev Boards</a></li>
+          <li><a href="https://github.com/andrewljf001" target="_blank">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 [BRAND]. All rights reserved.</span>
+      <span>Custom engineering · No fixed pricing</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/main.js"></script>
+<script>
+  // Discipline card toggle
+  document.querySelectorAll('.discipline-card').forEach(card => {
+    card.addEventListener('click', () => card.classList.toggle('selected'));
+  });
+
+  // Deliverable toggle
+  document.querySelectorAll('.deliverable-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.deliverable-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  // Char count
+  const descEl = document.getElementById('inline-desc');
+  const countEl = document.getElementById('inline-count');
+  descEl?.addEventListener('input', () => countEl.textContent = descEl.value.length);
+
+  // Submit: carry selections to /quote.html
+  document.getElementById('inline-submit')?.addEventListener('click', () => {
+    const disciplines = [...document.querySelectorAll('.discipline-card.selected')].map(c => c.dataset.value);
+    const deliverable = document.querySelector('.deliverable-btn.selected')?.dataset.value || '';
+    const description = document.getElementById('inline-desc')?.value || '';
+    const params = new URLSearchParams({ disciplines: disciplines.join(','), deliverable, description });
+    window.location.href = `/quote.html?${params}`;
+  });
+
+  // Load real cases from API (fallback to placeholders if API not ready)
+  async function loadCasesPreview() {
+    try {
+      const data = await CasesAPI.list();
+      if (!data?.cases?.length) return;
+      const grid = document.getElementById('cases-preview');
+      grid.innerHTML = data.cases.slice(0, 3).map(c => `
+        <div class="case-card">
+          <div class="case-thumb">
+            ${c.cover_image
+              ? `<img src="${c.cover_image}" alt="${c.title}" loading="lazy"/>`
+              : `<div class="case-thumb-placeholder">No image</div>`}
+          </div>
+          <div class="case-body">
+            <div class="case-tags">${(c.tags||[]).slice(0,3).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+            <h3>${c.title}</h3>
+            <p>${c.description}</p>
+            <a href="case-detail.html?slug=${c.slug}" class="case-link">View case →</a>
+          </div>
+        </div>
+      `).join('');
+    } catch(_) { /* keep placeholders */ }
+  }
+  loadCasesPreview();
+</script>
+</body>
+</html>
