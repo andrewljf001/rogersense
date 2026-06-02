@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — [BRAND]</title>
+  <link rel="stylesheet" href="assets/style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo">
+      <span class="nav-logo-name">[BRAND]</span>
+      <span class="nav-logo-sub">System Solutions</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="cases.html">Cases</a></li>
+      <li><a href="quote.html">New Brief</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-actions"></div>
+  </div>
+</nav>
+
+<main style="padding:40px 0 80px;">
+  <div class="container">
+    <div class="dashboard-layout">
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <ul class="sidebar-nav">
+          <li><a href="#" class="active" data-view="quotes">📋 My Briefs</a></li>
+          <li><a href="#" data-view="profile">👤 Profile</a></li>
+          <li><a href="quote.html">+ New Brief</a></li>
+          <li><a href="#" onclick="Auth.logout()">Sign out</a></li>
+        </ul>
+      </aside>
+
+      <!-- Main content -->
+      <div id="main-content">
+
+        <!-- Quotes list view -->
+        <div id="view-quotes">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+            <h2 style="font-size:1.3rem;">My Project Briefs</h2>
+            <a href="quote.html" class="btn btn-primary btn-sm">+ Submit New Brief</a>
+          </div>
+
+          <div id="quotes-loading" style="padding:40px;text-align:center;color:var(--color-text-light);">Loading…</div>
+          <div id="quotes-empty" style="display:none;padding:60px 20px;text-align:center;">
+            <p style="font-size:1rem;color:var(--color-text-muted);margin-bottom:20px;">No briefs submitted yet.</p>
+            <a href="quote.html" class="btn btn-primary">Submit Your First Brief →</a>
+          </div>
+
+          <div class="table-wrap" id="quotes-table" style="display:none;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Project</th>
+                  <th>Disciplines</th>
+                  <th>Status</th>
+                  <th>Submitted</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="quotes-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Quote detail view -->
+        <div id="view-quote-detail" style="display:none;">
+          <button class="btn btn-ghost" id="back-to-list" style="margin-bottom:20px;">← Back to briefs</button>
+
+          <div id="quote-detail-content"></div>
+
+          <!-- Message thread -->
+          <div style="margin-top:40px;">
+            <h3 style="font-family:var(--font-sans);font-size:1rem;font-weight:600;margin-bottom:20px;">Messages</h3>
+            <div class="thread" id="message-thread"></div>
+
+            <div style="margin-top:20px;display:flex;gap:10px;">
+              <textarea
+                class="form-textarea"
+                id="msg-input"
+                rows="2"
+                placeholder="Write a message…"
+                style="min-height:60px;flex:1;"
+              ></textarea>
+              <button class="btn btn-primary" id="msg-send" style="align-self:flex-end;">Send</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile view -->
+        <div id="view-profile" style="display:none;">
+          <h2 style="font-size:1.3rem;margin-bottom:24px;">Profile</h2>
+          <div style="max-width:440px;display:flex;flex-direction:column;gap:14px;">
+            <div class="form-field">
+              <label>Full name</label>
+              <input type="text" class="form-input" id="profile-name"/>
+            </div>
+            <div class="form-field">
+              <label>Email</label>
+              <input type="email" class="form-input" id="profile-email" disabled style="opacity:0.6;"/>
+            </div>
+            <div class="form-field">
+              <label>Company</label>
+              <input type="text" class="form-input" id="profile-company" placeholder="Optional"/>
+            </div>
+            <button class="btn btn-primary" style="width:fit-content;" id="profile-save">Save changes</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="assets/main.js"></script>
+<script>
+  requireAuth();
+
+  let currentQuoteId = null;
+
+  // Fill profile
+  const user = Auth.getUser();
+  if (user) {
+    document.getElementById('profile-name').value    = user.name    || '';
+    document.getElementById('profile-email').value   = user.email   || '';
+    document.getElementById('profile-company').value = user.company || '';
+  }
+
+  // Sidebar nav
+  document.querySelectorAll('.sidebar-nav [data-view]').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      showView(link.dataset.view);
+      document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+      link.classList.add('active');
+    });
+  });
+
+  function showView(name) {
+    ['quotes','quote-detail','profile'].forEach(v =>
+      document.getElementById(`view-${v}`).style.display = v === name ? 'block' : 'none'
+    );
+  }
+
+  // Load quotes
+  async function loadQuotes() {
+    try {
+      const data = await QuotesAPI.list();
+      const quotes = data?.quotes || [];
+      document.getElementById('quotes-loading').style.display = 'none';
+      if (!quotes.length) {
+        document.getElementById('quotes-empty').style.display = 'block';
+      } else {
+        document.getElementById('quotes-table').style.display = 'block';
+        document.getElementById('quotes-tbody').innerHTML = quotes.map(q => `
+          <tr style="cursor:pointer;" data-id="${q.id}">
+            <td>
+              <div style="font-weight:500;font-size:0.875rem;">${q.description.slice(0,60)}…</div>
+              <div style="font-size:0.75rem;color:var(--color-text-light);">#${q.id.slice(0,8)}</div>
+            </td>
+            <td style="font-size:0.8rem;color:var(--color-text-muted);">${(q.disciplines||[]).join(', ')}</td>
+            <td>${statusBadge(q.status)}</td>
+            <td style="font-size:0.8rem;color:var(--color-text-muted);">${formatDate(q.created_at)}</td>
+            <td><a class="case-link">View →</a></td>
+          </tr>
+        `).join('');
+        document.querySelectorAll('#quotes-tbody tr').forEach(row => {
+          row.addEventListener('click', () => openQuote(row.dataset.id));
+        });
+      }
+    } catch(_) {
+      document.getElementById('quotes-loading').textContent = 'Could not load briefs. Please try again.';
+    }
+  }
+
+  async function openQuote(id) {
+    currentQuoteId = id;
+    showView('quote-detail');
+    document.getElementById('quote-detail-content').innerHTML = '<p style="color:var(--color-text-light);">Loading…</p>';
+    document.getElementById('message-thread').innerHTML = '';
+
+    try {
+      const [quoteData, msgData] = await Promise.all([
+        QuotesAPI.get(id),
+        MessagesAPI.list(id)
+      ]);
+      const q = quoteData.quote;
+      document.getElementById('quote-detail-content').innerHTML = `
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+          <div>
+            <p class="eyebrow mb-8">Brief #${q.id.slice(0,8)}</p>
+            <p style="font-size:0.875rem;color:var(--color-text-muted);">Submitted ${formatDate(q.created_at)}</p>
+          </div>
+          ${statusBadge(q.status)}
+        </div>
+        <div style="background:var(--color-bg-2);border-radius:var(--radius-md);padding:20px;margin-bottom:20px;">
+          <p style="font-size:0.8rem;font-weight:600;color:var(--color-text-muted);margin-bottom:8px;">DISCIPLINES</p>
+          <div class="case-tags">${(q.disciplines||[]).map(d=>`<span class="tag">${d}</span>`).join('')}</div>
+          <p style="font-size:0.8rem;font-weight:600;color:var(--color-text-muted);margin:16px 0 8px;">PROJECT DESCRIPTION</p>
+          <p style="font-size:0.875rem;">${q.description}</p>
+          ${q.files?.length ? `
+            <p style="font-size:0.8rem;font-weight:600;color:var(--color-text-muted);margin:16px 0 8px;">ATTACHED FILES</p>
+            <div class="file-list">${q.files.map(f=>`
+              <div class="file-item">
+                <span class="file-item-name">📄 ${f.name}</span>
+                <span class="file-item-size">${formatSize(f.size)}</span>
+              </div>`).join('')}
+            </div>` : ''}
+        </div>
+      `;
+      renderMessages(msgData?.messages || []);
+    } catch(e) {
+      document.getElementById('quote-detail-content').innerHTML = `<p style="color:var(--color-accent);">Failed to load brief.</p>`;
+    }
+  }
+
+  function renderMessages(messages) {
+    const thread = document.getElementById('message-thread');
+    if (!messages.length) {
+      thread.innerHTML = '<p style="color:var(--color-text-light);font-size:0.875rem;">No messages yet. We\'ll respond within 24 hours.</p>';
+      return;
+    }
+    thread.innerHTML = messages.map(m => `
+      <div class="message ${m.role === 'admin' ? 'from-admin' : ''}">
+        <div class="msg-avatar">${m.role === 'admin' ? '⚙' : (user?.name?.[0] || '?')}</div>
+        <div>
+          <div class="msg-bubble">${m.content}</div>
+          <p class="msg-time">${formatDate(m.created_at)}</p>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Back button
+  document.getElementById('back-to-list').addEventListener('click', () => showView('quotes'));
+
+  // Send message
+  document.getElementById('msg-send').addEventListener('click', async () => {
+    const content = document.getElementById('msg-input').value.trim();
+    if (!content || !currentQuoteId) return;
+    try {
+      await MessagesAPI.send(currentQuoteId, content);
+      document.getElementById('msg-input').value = '';
+      const msgData = await MessagesAPI.list(currentQuoteId);
+      renderMessages(msgData?.messages || []);
+    } catch(e) {
+      showToast('Failed to send message', 'error');
+    }
+  });
+
+  // Profile save (stub)
+  document.getElementById('profile-save').addEventListener('click', () => {
+    showToast('Profile updated');
+  });
+
+  loadQuotes();
+</script>
+</body>
+</html>
