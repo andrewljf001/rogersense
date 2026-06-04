@@ -1,0 +1,137 @@
+/* Rogersense forum theme — match the main site (dark navy + electric teal).
+   Loaded into Flarum's custom_less. Pairs with custom_header / custom_footer. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@rs-bg:        #0F1923;
+@rs-bg2:       #0D2236;
+@rs-surface:   #162030;
+@rs-surface2:  #1B2838;
+@rs-text:      #F0F4F8;
+@rs-muted:     #8BA3B8;
+@rs-dim:       #4A6478;
+@rs-border:    #1E2D3D;
+@rs-border-dark: #2A3F52;
+@rs-accent:    #00D4AA;
+@rs-accent-h:  #00B894;
+
+/* ---------- base ---------- */
+body, .App {
+  background-color: @rs-bg;
+  color: @rs-text;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+h1,h2,h3,h4,.item-title { color: @rs-text; }
+a { color: @rs-accent; }
+a:hover { color: @rs-accent-h; }
+.muted,.item-muted,.Post-meta,.DiscussionListItem-info,.DiscussionListItem-info .item-excerpt { color: @rs-muted; }
+
+/* ---------- brand top bar (custom_header) ---------- */
+.rs-topbar {
+  background: @rs-bg;
+  border-bottom: 1px solid @rs-border;
+  position: relative; z-index: 50;
+}
+.rs-topbar-inner {
+  max-width: 1120px; margin: 0 auto; padding: 0 24px;
+  height: 60px; display: flex; align-items: center; justify-content: space-between;
+}
+.rs-logo { display: flex; flex-direction: column; line-height: 1.05; text-decoration: none; }
+.rs-logo:hover { text-decoration: none; }
+.rs-logo-name { color: @rs-text; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.01em; }
+.rs-logo-sub  { color: @rs-accent; font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; }
+.rs-topnav { display: flex; align-items: center; gap: 26px; }
+.rs-topnav a { color: @rs-muted; font-size: 0.875rem; font-weight: 500; text-decoration: none; transition: color .15s; }
+.rs-topnav a:hover { color: @rs-text; }
+.rs-topnav a.rs-active { color: @rs-text; }
+.rs-topnav a.rs-cta {
+  background: @rs-accent; color: #0F1923; padding: 8px 16px; border-radius: 6px; font-weight: 600;
+}
+.rs-topnav a.rs-cta:hover { background: @rs-accent-h; color: #0F1923; }
+@media (max-width: 767px){ .rs-topnav a:not(.rs-cta):not(.rs-active){ display:none; } .rs-topbar-inner{ padding:0 16px; } }
+
+/* ---------- Flarum header (slim, under the brand bar) ---------- */
+.App-header { background: @rs-bg2; border-bottom: 1px solid @rs-border; box-shadow: none; }
+.Header-title, .Header-logo { display: none; }   /* brand shown in top bar instead */
+.Header-controls .Button { background: @rs-surface; color: @rs-text; }
+.Search-input .FormControl { background: @rs-surface; color: @rs-text; border: 1px solid @rs-border; border-radius: 6px; }
+.item-session .Button { background: transparent; color: @rs-text; }
+.item-signUp .Button { color: @rs-text; }
+.item-logIn .Button { color: @rs-text; }
+
+/* ---------- hero (promotional welcome) ---------- */
+.Hero.WelcomeHero {
+  background: linear-gradient(180deg, @rs-bg2 0%, @rs-bg 100%);
+  border-bottom: 1px solid @rs-border; color: @rs-text; text-shadow: none;
+  padding: 64px 0 60px;
+}
+.WelcomeHero .container { max-width: 1120px; padding: 0 24px; }
+.WelcomeHero .Hero-title {
+  color: @rs-text; font-size: clamp(1.7rem, 4vw, 2.4rem); font-weight: 800; line-height: 1.15; margin: 0 auto;
+}
+.WelcomeHero .Hero-title::before {
+  content: "Rogersense Community";
+  display: block; color: @rs-accent; font-size: 0.78rem; letter-spacing: 0.14em;
+  text-transform: uppercase; font-weight: 600; margin-bottom: 14px;
+}
+.WelcomeHero .Hero-subtitle { color: @rs-muted; font-size: 1rem; max-width: 640px; margin: 16px auto 0; }
+.WelcomeHero .Hero-close .icon { color: @rs-muted; }
+
+/* ---------- content width ---------- */
+.IndexPage, .DiscussionPage, .global-content, .sideNavContainer { background-color: @rs-bg; }
+.IndexPage-results .container, .DiscussionPage .container { max-width: 1120px; }
+
+/* ---------- toolbar (Start a Discussion) ---------- */
+.IndexPage-toolbar { padding-top: 28px; }
+.Button { background-color: @rs-surface; color: @rs-text; border: 1px solid @rs-border; border-radius: 6px; }
+.Button:hover { background-color: @rs-surface2; }
+.Button--primary, .Button--primary:not([disabled]):hover { background-color: @rs-accent; color: #0F1923; border-color: @rs-accent; font-weight: 600; }
+.Button--primary:hover { background-color: @rs-accent-h; }
+
+/* ---------- discussion list as cards ---------- */
+.DiscussionList-discussions { background: transparent; }
+.DiscussionListItem {
+  background-color: @rs-surface; border: 1px solid @rs-border; border-radius: 10px;
+  margin-bottom: 10px; padding: 14px 16px;
+}
+.DiscussionListItem:hover { background-color: @rs-surface2; border-color: @rs-border-dark; }
+.DiscussionListItem-title { color: @rs-text; font-weight: 600; }
+.DiscussionListItem-count { color: @rs-accent; }
+
+/* ---------- posts, dropdowns, modals, forms ---------- */
+.PostStream, .Post-body, .CommentPost-body { color: @rs-text; }
+.PostStream-item { border-color: @rs-border; }
+.Dropdown-menu, .Modal-content, .Popover, .Tooltip-inner {
+  background-color: @rs-surface; color: @rs-text; border: 1px solid @rs-border;
+}
+.Dropdown-menu > li > a, .Dropdown-menu > li > button { color: @rs-text; }
+.Dropdown-menu > li > a:hover, .Dropdown-menu > li > button:hover { background-color: @rs-surface2; color: @rs-text; }
+.FormControl, input.FormControl, textarea.FormControl, select.FormControl {
+  background-color: @rs-surface; color: @rs-text; border: 1px solid @rs-border;
+}
+.FormControl:focus { border-color: @rs-accent; box-shadow: 0 0 0 2px fade(@rs-accent, 20%); }
+::placeholder { color: @rs-dim; }
+.Composer, .TextEditor, .TextEditor-editor { background-color: @rs-surface; color: @rs-text; }
+
+/* ---------- empty state ---------- */
+.DiscussionList .LoadingIndicator, .IndexPage .DiscussionList-discussions + * { color: @rs-muted; }
+
+/* ---------- footer (custom_footer) ---------- */
+.rs-footer { background: @rs-bg2; border-top: 1px solid @rs-border; margin-top: 60px; padding: 48px 0 28px; }
+.rs-footer-inner {
+  max-width: 1120px; margin: 0 auto; padding: 0 24px;
+  display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+}
+.rs-footer-name { color: @rs-text; font-weight: 800; font-size: 1.1rem; margin: 0 0 10px; }
+.rs-footer-desc { color: @rs-muted; font-size: 0.85rem; line-height: 1.7; margin: 0; }
+.rs-footer-col h4 { color: @rs-text; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 14px; }
+.rs-footer-col a { display: block; color: @rs-muted; font-size: 0.875rem; text-decoration: none; margin-bottom: 10px; }
+.rs-footer-col a:hover { color: @rs-accent; }
+.rs-footer-bottom {
+  max-width: 1120px; margin: 28px auto 0; padding: 20px 24px 0;
+  border-top: 1px solid @rs-border; display: flex; justify-content: space-between;
+  color: @rs-dim; font-size: 0.8rem;
+}
+@media (max-width: 767px){
+  .rs-footer-inner{ grid-template-columns: 1fr; gap: 28px; }
+  .rs-footer-bottom{ flex-direction: column; gap: 8px; }
+}
