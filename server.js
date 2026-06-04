@@ -514,7 +514,9 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 db.initDB()
   .catch(err => console.error('initDB error:', err.message))
   .finally(() => {
-    app.listen(PORT, () => console.log(`🚀 rogersense server on http://localhost:${PORT}`));
+    // Bind to loopback only — Nginx reverse-proxies from the same host.
+    // Port 3002 is never exposed externally (no firewall opening needed).
+    app.listen(PORT, '127.0.0.1', () => console.log(`🚀 rogersense server on http://127.0.0.1:${PORT}`));
   });
 
 module.exports = app;
