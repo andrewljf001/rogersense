@@ -141,6 +141,14 @@ async function run() {
   const presignNoAuth = await req('POST', '/upload/presign', { body: { filename: 'a.zip' } });
   check('presign without token → 401', presignNoAuth.status === 401);
 
+  // /img public redirect — serves cases/ only, never private prefixes.
+  const imgCase = await fetch(`${BASE}/img?key=cases/x.jpg`, { redirect: 'manual' });
+  check('/img cases/ → 302 redirect', imgCase.status === 302);
+  const imgQuote = await fetch(`${BASE}/img?key=quotes/secret.pdf`, { redirect: 'manual' });
+  check('/img quotes/ → 403 (private blocked)', imgQuote.status === 403);
+  const imgBackup = await fetch(`${BASE}/img?key=backups/d1/latest.json.gz`, { redirect: 'manual' });
+  check('/img backups/ → 403 (private blocked)', imgBackup.status === 403);
+
   // ── Cleanup ───────────────────────────────────────────────
   const del = await req('DELETE', `/cases/${caseId}`, { token: adminToken });
   check('admin deletes case → 200', del.status === 200);

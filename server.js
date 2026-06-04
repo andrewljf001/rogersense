@@ -57,7 +57,6 @@ const r2 = new S3Client({
   },
 });
 const R2_BUCKET     = process.env.R2_BUCKET || 'rogersense-files';
-const R2_PUBLIC_URL = (process.env.R2_PUBLIC_URL || '').replace(/\/$/, '');
 
 /** Presigned PUT URL so the browser uploads directly to R2. */
 async function presignUpload(key, contentType) {
@@ -434,11 +433,27 @@ app.post('/upload/presign', auth, async (req, res) => {
     const safeFolder = ['quotes', 'cases', 'messages'].includes(folder) ? folder : 'quotes';
     const key = `${safeFolder}/${Date.now()}_${safe}`;
     const url = await presignUpload(key, contentType);
-    const publicUrl = R2_PUBLIC_URL ? `${R2_PUBLIC_URL}/${key}` : key;
+    // Case images are shown publicly via the /img redirect (cases/ only);
+    // private files (quotes/messages) are referenced by key and downloaded
+    // through the authenticated /files/signed route.
+    const publicUrl = safeFolder === 'cases' ? `/img?key=${encodeURIComponent(key)}` : null;
     res.json({ url, key, publicUrl });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
-// Signed download URL for a stored key (owner/admin).
+
+// Public image redirect — serves ONLY case images (cases/ prefix) by
+// 302-ing to a short-lived presigned GET. Quote/message files and backups
+// are never reachable here.
+app.get('/img', async (req, res) => {
+  try {
+    const key = req.query.key;
+    if (!key || !/^cases\//.test(key)) return res.status(403).send('forbidden');
+    res.set('Cache-Control', 'public, max-age=300');
+    res.redirect(302, await presignDownload(key));
+  } catch (e) { res.status(500).send('error'); }
+});
+
+// Signed download URL for a private stored key (owner/admin).
 app.get('/files/signed', auth, async (req, res) => {
   try {
     const { key } = req.query;
