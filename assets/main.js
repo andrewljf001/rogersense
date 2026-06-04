@@ -3,7 +3,10 @@
    Connects to Cloudflare Workers backend
    ============================================================ */
 
-const API_BASE = 'https://api.[BRAND].com'; // replace after deploy
+// Same-origin: the Node/Express server serves both the frontend and the API.
+// Override to a full origin (e.g. 'https://api.rogersense.com') only if you
+// split the API onto a separate host.
+const API_BASE = '';
 
 /* ── Token helpers ── */
 const Auth = {
@@ -113,18 +116,20 @@ const CasesAPI = {
 /* ── File Upload (R2 presigned) ── */
 const UploadAPI = {
   async upload(file, folder = 'quotes') {
-    // 1. Get presigned URL from Workers
-    const { url, key } = await apiFetch('/upload/presign', {
+    // 1. Get a presigned PUT URL from the API
+    const { url, key, publicUrl } = await apiFetch('/upload/presign', {
       method: 'POST',
       body: JSON.stringify({ filename: file.name, contentType: file.type, folder })
     });
-    // 2. PUT directly to R2
+    // 2. PUT the file directly to R2
     await fetch(url, {
       method: 'PUT',
       headers: { 'Content-Type': file.type },
       body: file
     });
-    return { key, name: file.name, size: file.size };
+    // `url` (publicUrl) is for rendering (e.g. case images); `key` is the
+    // private storage reference (e.g. quote attachments).
+    return { key, url: publicUrl || key, name: file.name, size: file.size };
   }
 };
 

@@ -356,12 +356,12 @@
       const coverFile = document.getElementById('cover-input').files[0];
       if (coverFile) {
         const r = await UploadAPI.upload(coverFile, 'cases');
-        cover_image = r.key;
+        cover_image = r.url;   // public URL so <img> renders
       }
       const images = [];
       for (const f of pendingPhotos) {
         const r = await UploadAPI.upload(f, 'cases');
-        images.push(r.key);
+        images.push(r.url);
       }
       await CasesAPI.create({ title, slug: slugify(title), category, tags, description: desc, cover_image, images, published });
       document.getElementById('case-form-wrap').style.display = 'none';

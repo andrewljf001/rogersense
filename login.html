@@ -100,11 +100,29 @@
 
 <script src="assets/main.js"></script>
 <script>
-  // If already logged in, redirect
-  if (Auth.isLoggedIn()) {
+  // Handle GitHub OAuth redirect (?token=...), existing session, or ?error=
+  (async () => {
     const params = new URLSearchParams(location.search);
-    window.location.href = params.get('redirect') || '/dashboard.html';
-  }
+    const incomingToken = params.get('token');
+    if (incomingToken) {
+      Auth.setToken(incomingToken);
+      try { const data = await AuthAPI.me(); if (data?.user) Auth.setUser(data.user); } catch (_) {}
+      window.location.href = params.get('redirect') || '/dashboard.html';
+      return;
+    }
+    if (Auth.isLoggedIn()) {
+      window.location.href = params.get('redirect') || '/dashboard.html';
+      return;
+    }
+    const oauthError = params.get('error');
+    if (oauthError) {
+      const el = document.getElementById('login-error');
+      el.textContent = oauthError === 'github_not_configured'
+        ? 'GitHub sign-in is not configured yet — please use email.'
+        : 'GitHub sign-in failed — please use email.';
+      el.style.display = 'block';
+    }
+  })();
 
   // Toggle views
   document.getElementById('show-register').addEventListener('click', e => {

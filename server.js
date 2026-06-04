@@ -486,11 +486,12 @@ app.put('/api/admin/settings/encrypted/:key', auth, adminOnly, async (req, res) 
 // STATIC FRONTEND (explicit whitelist — never serve server.js/.env)
 // ════════════════════════════════════════════════════════════
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
+// Only `.html` page routes (+ `/`) — extensionless aliases are intentionally
+// omitted so they never collide with API routes like GET /cases.
 const PAGES = ['index', 'cases', 'case-detail', 'quote', 'about', 'login', 'dashboard', 'admin'];
 app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 PAGES.forEach(name => {
   app.get(`/${name}.html`, (_req, res) => res.sendFile(path.join(__dirname, `${name}.html`)));
-  app.get(`/${name}`,      (_req, res) => res.sendFile(path.join(__dirname, `${name}.html`)));
 });
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
