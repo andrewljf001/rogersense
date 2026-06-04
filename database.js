@@ -14,20 +14,45 @@ const CF_API_TOKEN  = process.env.CLOUDFLARE_API_TOKEN;
 
 const BASE_URL = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/d1/database/${CF_DB_ID}/query`;
 
+// ── Driver selection ────────────────────────────────────────
+// Production: Cloudflare D1 over HTTP. Local dev / automated tests:
+// better-sqlite3 (D1 *is* SQLite, so this is a faithful test double).
+// Opt in with DB_DRIVER=sqlite (SQLITE_PATH optional, default in-memory).
+const USE_SQLITE = process.env.DB_DRIVER === 'sqlite';
+
+let sqliteDb = null;
+function getSqlite() {
+  if (sqliteDb) return sqliteDb;
+  const { DatabaseSync } = require('node:sqlite');   // built-in, no native build
+  sqliteDb = new DatabaseSync(process.env.SQLITE_PATH || ':memory:');
+  return sqliteDb;
+}
+const IS_READ = /^\s*(select|pragma|with)\b/i;
+
 /**
- * Run a SQL statement against D1.
- * Accepts Postgres-style `$1` placeholders (auto-rewritten to `?`) or `?` directly.
+ * Run a SQL statement.
+ * Accepts Postgres-style `$1` placeholders (auto-rewritten to `?`) or `?`.
  * @returns {Promise<{rows: object[], rowCount: number}>}
  */
 async function query(sql, params = []) {
-  const d1sql = sql.replace(/\$(\d+)/g, '?');
+  const sqlQ = sql.replace(/\$(\d+)/g, '?');
+
+  if (USE_SQLITE) {
+    const stmt = getSqlite().prepare(sqlQ);
+    if (IS_READ.test(sqlQ)) {
+      return { rows: stmt.all(...params), rowCount: 0 };
+    }
+    const info = stmt.run(...params);
+    return { rows: [], rowCount: Number(info.changes) };
+  }
+
   const res = await fetchFn(BASE_URL, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${CF_API_TOKEN}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ sql: d1sql, params }),
+    body: JSON.stringify({ sql: sqlQ, params }),
   });
   const data = await res.json();
   if (!data.success) {
@@ -42,9 +67,10 @@ async function query(sql, params = []) {
 }
 
 async function initDB() {
-  if (!CF_ACCOUNT_ID || !CF_DB_ID || !CF_API_TOKEN) {
+  if (!USE_SQLITE && (!CF_ACCOUNT_ID || !CF_DB_ID || !CF_API_TOKEN)) {
     console.warn('⚠️  Cloudflare D1 env vars not set — skipping initDB(). ' +
-      'Set CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_D1_DATABASE_ID / CLOUDFLARE_API_TOKEN.');
+      'Set CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_D1_DATABASE_ID / CLOUDFLARE_API_TOKEN ' +
+      '(or DB_DRIVER=sqlite for local).');
     return;
   }
 

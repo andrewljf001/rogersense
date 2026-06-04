@@ -11,9 +11,9 @@
 | Phase | Name | Status |
 |-------|------|--------|
 | 0 | Planning & Architecture | ✅ Done |
-| 1 | Main Site — Frontend (static pages) | ✅ Done (wired to API, awaiting backend) |
-| 2 | API Backend (Node/Express + D1 + R2) | ⏳ In progress |
-| 3 | Wire Frontend ↔ Backend | ⏳ Pending |
+| 1 | Main Site — Frontend (static pages) | ✅ Done |
+| 2 | API Backend (Node/Express + D1 + R2) | ✅ Done (33/33 E2E tests pass on SQLite double) |
+| 3 | Wire Frontend ↔ Backend | ✅ Code-complete (DB-backed UI walk-through pending deploy) |
 | 4 | VPS Deployment (Nginx + PM2 + CF + backups) | ⏳ Pending |
 | 5 | Forum (Flarum + unified style + SSO) | ⏳ Pending |
 | 6 | Brand Name & Domain | ⏳ Pending |
@@ -131,3 +131,5 @@ All 8 pages built with the locked Deep Navy + Electric Teal design system.
 | 2026-06-02 | Repo + initial docs; full frontend built | Claude + andrewljf001 |
 | 2026-06-04 | Studied live sister project; **revised architecture to VPS+Node/Express+D1(HTTP)+R2** | Claude + andrewljf001 |
 | 2026-06-04 | Rewrote ARCHITECTURE.md & PROGRESS.md; corrected repo name; designed rogersense D1 schema + API | Claude |
+| 2026-06-04 | Built Node/Express backend (D1 HTTP + R2 presign + backup/restore); wired frontend (same-origin) | Claude |
+| 2026-06-04 | Added local SQLite test double (node:sqlite) + E2E suite — 33/33 passing | Claude |

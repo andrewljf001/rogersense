@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "backup": "node scripts/backup-d1.js"
+    "backup": "node scripts/backup-d1.js",
+    "test": "node test-e2e.js"
   },
   "engines": {
     "node": ">=18.0.0"
