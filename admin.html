@@ -14,8 +14,10 @@
       <span class="nav-logo-sub">Admin</span>
     </a>
     <ul class="nav-links">
-      <li><a href="#" data-view="quotes" class="active">Quotes</a></li>
+      <li><a href="#" data-view="quotes" class="active">Briefs</a></li>
+      <li><a href="#" data-view="customers">Customers</a></li>
       <li><a href="#" data-view="cases">Cases</a></li>
+      <li><a href="#" data-view="settings">Settings</a></li>
     </ul>
     <div class="nav-actions" id="nav-actions"></div>
   </div>
@@ -84,6 +86,43 @@
             <button class="btn btn-primary" id="admin-send" style="align-self:flex-end;">Send</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- ── Customers Management ── -->
+    <div id="view-customers" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+        <h2 style="font-size:1.3rem;">Customers</h2>
+        <div style="display:flex;gap:8px;">
+          <input class="form-input" id="customer-search" placeholder="Search name, email, company…" style="width:auto;padding:8px 12px;"/>
+          <select class="form-input" id="customer-type-filter" style="width:auto;padding:8px 12px;">
+            <option value="">All types</option>
+            <option value="normal">Normal</option>
+            <option value="vip">VIP</option>
+            <option value="blacklist">Blacklist</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="loadCustomers()">↻ Refresh</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Customer</th><th>Company</th><th>Type</th><th>Briefs</th><th>Joined</th><th>Action</th></tr>
+          </thead>
+          <tbody id="customers-tbody">
+            <tr><td colspan="6" style="text-align:center;color:var(--color-text-light);padding:40px;">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Customer detail panel -->
+      <div id="customer-panel" style="display:none;margin-top:32px;border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:28px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <h3 style="font-family:var(--font-sans);font-size:1rem;font-weight:600;" id="customer-panel-title">Customer</h3>
+          <button class="btn btn-ghost" onclick="document.getElementById('customer-panel').style.display='none'">✕ Close</button>
+        </div>
+        <div id="customer-panel-content"></div>
       </div>
     </div>
 
@@ -165,6 +204,70 @@
       </div>
     </div>
 
+    <!-- ── Settings ── -->
+    <div id="view-settings" style="display:none;">
+      <h2 style="font-size:1.3rem;margin-bottom:24px;">Settings</h2>
+
+      <!-- Company / contact -->
+      <div style="border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:28px;margin-bottom:24px;max-width:760px;">
+        <h3 style="font-family:var(--font-sans);font-size:1rem;font-weight:600;margin-bottom:4px;">Company / Contact</h3>
+        <p style="font-size:0.8rem;color:var(--color-text-muted);margin-bottom:20px;">Shown across the site. The contact email also receives a notification whenever a new brief is submitted.</p>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="form-field"><label>Company name</label>
+            <div style="display:flex;gap:8px;"><input class="form-input" id="set-company_name"/><button class="btn btn-outline btn-sm" onclick="saveSetting('company_name','set-company_name')">Save</button></div></div>
+          <div class="form-field"><label>Contact / notification email <span style="color:var(--color-text-light);font-weight:400;">(receives new-brief alerts)</span></label>
+            <div style="display:flex;gap:8px;"><input class="form-input" id="set-contact_email" placeholder="admin@rogersense.com"/><button class="btn btn-outline btn-sm" onclick="saveSetting('contact_email','set-contact_email')">Save</button></div></div>
+          <div class="form-field"><label>Forum URL</label>
+            <div style="display:flex;gap:8px;"><input class="form-input" id="set-forum_url" placeholder="https://forum.rogersense.com"/><button class="btn btn-outline btn-sm" onclick="saveSetting('forum_url','set-forum_url')">Save</button></div></div>
+        </div>
+      </div>
+
+      <!-- Mail server -->
+      <div style="border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:28px;max-width:760px;">
+        <h3 style="font-family:var(--font-sans);font-size:1rem;font-weight:600;margin-bottom:4px;">Mail server</h3>
+        <p style="font-size:0.8rem;color:var(--color-text-muted);margin-bottom:20px;">Passwords / API keys are <b>AES-256-GCM encrypted</b> before storage. Leave the password field blank to keep the current one.</p>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="form-field"><label>Driver</label>
+            <div style="display:flex;gap:8px;"><select class="form-input" id="set-mail_driver" onchange="toggleMailFields()"><option value="smtp">SMTP</option><option value="resend">Resend API</option></select><button class="btn btn-outline btn-sm" onclick="saveSetting('mail_driver','set-mail_driver')">Save</button></div></div>
+          <div class="form-field"><label>Sender email (From)</label>
+            <div style="display:flex;gap:8px;"><input class="form-input" id="set-mail_from" placeholder="admin@rogersense.com"/><button class="btn btn-outline btn-sm" onclick="saveSetting('mail_from','set-mail_from')">Save</button></div></div>
+          <div class="form-field"><label>Sender display name</label>
+            <div style="display:flex;gap:8px;"><input class="form-input" id="set-mail_from_name" placeholder="Rogersense"/><button class="btn btn-outline btn-sm" onclick="saveSetting('mail_from_name','set-mail_from_name')">Save</button></div></div>
+
+          <!-- SMTP fields -->
+          <div id="smtp-fields" style="display:flex;flex-direction:column;gap:16px;border-top:1px solid var(--color-border);padding-top:16px;">
+            <p style="font-size:0.75rem;font-weight:600;color:var(--color-text-muted);">SMTP SETTINGS</p>
+            <div class="form-field"><label>SMTP host</label>
+              <div style="display:flex;gap:8px;"><input class="form-input" id="set-smtp_host" placeholder="smtp.zeptomail.com"/><button class="btn btn-outline btn-sm" onclick="saveSetting('smtp_host','set-smtp_host')">Save</button></div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div class="form-field"><label>Port</label>
+                <div style="display:flex;gap:8px;"><input class="form-input" id="set-smtp_port" placeholder="587"/><button class="btn btn-outline btn-sm" onclick="saveSetting('smtp_port','set-smtp_port')">Save</button></div></div>
+              <div class="form-field"><label>SSL (secure)</label>
+                <div style="display:flex;gap:8px;"><select class="form-input" id="set-smtp_secure"><option value="false">false (TLS / 587)</option><option value="true">true (SSL / 465)</option></select><button class="btn btn-outline btn-sm" onclick="saveSetting('smtp_secure','set-smtp_secure')">Save</button></div></div>
+            </div>
+            <div class="form-field"><label>SMTP username</label>
+              <div style="display:flex;gap:8px;"><input class="form-input" id="set-smtp_user" placeholder="emailapikey  /  admin@rogersense.com"/><button class="btn btn-outline btn-sm" onclick="saveSetting('smtp_user','set-smtp_user')">Save</button></div></div>
+            <div class="form-field"><label>SMTP password / token <span style="color:var(--color-text-light);font-weight:400;">(encrypted)</span></label>
+              <div style="display:flex;gap:8px;"><input class="form-input" type="password" id="enc-smtp_pass" placeholder="Enter password / token to update"/><button class="btn btn-primary btn-sm" onclick="saveEncrypted('smtp_pass_enc','enc-smtp_pass')">Encrypt &amp; Save</button></div></div>
+          </div>
+
+          <!-- Resend fields -->
+          <div id="resend-fields" style="display:none;flex-direction:column;gap:16px;border-top:1px solid var(--color-border);padding-top:16px;">
+            <p style="font-size:0.75rem;font-weight:600;color:var(--color-text-muted);">RESEND API</p>
+            <div class="form-field"><label>Resend API key <span style="color:var(--color-text-light);font-weight:400;">(encrypted)</span></label>
+              <div style="display:flex;gap:8px;"><input class="form-input" type="password" id="enc-resend" placeholder="re_xxxxxxxx"/><button class="btn btn-primary btn-sm" onclick="saveEncrypted('resend_api_key_enc','enc-resend')">Encrypt &amp; Save</button></div></div>
+          </div>
+
+          <!-- Test email -->
+          <div style="border-top:1px solid var(--color-border);padding-top:16px;display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+            <div class="form-field" style="flex:1;min-width:220px;"><label>Send a test email to</label><input class="form-input" id="test-mail-to" placeholder="you@example.com"/></div>
+            <button class="btn btn-outline" onclick="testMail()">Send test</button>
+            <span id="test-mail-result" style="font-size:0.8rem;"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </main>
 
@@ -176,14 +279,20 @@
   const pendingPhotos = [];
 
   // Nav tabs
+  const VIEWS = ['quotes', 'customers', 'cases', 'settings'];
   document.querySelectorAll('.nav-links [data-view]').forEach(link => {
     link.addEventListener('click', e => {
       e.preventDefault();
-      document.getElementById('view-quotes').style.display = link.dataset.view === 'quotes' ? 'block' : 'none';
-      document.getElementById('view-cases').style.display  = link.dataset.view === 'cases'  ? 'block' : 'none';
+      const v = link.dataset.view;
+      VIEWS.forEach(name => {
+        const el = document.getElementById('view-' + name);
+        if (el) el.style.display = (name === v) ? 'block' : 'none';
+      });
       document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
       link.classList.add('active');
-      if (link.dataset.view === 'cases') loadAdminCases();
+      if (v === 'cases')     loadAdminCases();
+      if (v === 'customers') loadCustomers();
+      if (v === 'settings')  loadSettings();
     });
   });
 
@@ -284,6 +393,111 @@
 
   document.getElementById('status-filter').addEventListener('change', loadAdminQuotes);
 
+  // ── CUSTOMERS ──
+
+  async function loadCustomers() {
+    const q = document.getElementById('customer-search').value.trim();
+    const type = document.getElementById('customer-type-filter').value;
+    const tbody = document.getElementById('customers-tbody');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--color-text-light);padding:40px;">Loading…</td></tr>';
+    try {
+      const params = [type ? `type=${type}` : '', q ? `q=${encodeURIComponent(q)}` : ''].filter(Boolean).join('&');
+      const data = await apiFetch('/api/admin/customers' + (params ? `?${params}` : ''));
+      const cs = data?.customers || [];
+      tbody.innerHTML = cs.length
+        ? cs.map(c => `
+          <tr style="cursor:pointer;" data-id="${c.id}">
+            <td><div style="font-weight:500;font-size:0.875rem;">${c.name||'—'}</div><div style="font-size:0.75rem;color:var(--color-text-light);">${c.email}</div></td>
+            <td style="font-size:0.8rem;">${c.company||'—'}</td>
+            <td><span class="tag">${c.customer_type||'normal'}</span></td>
+            <td style="text-align:center;font-size:0.8rem;">${c.brief_count||0}</td>
+            <td style="font-size:0.8rem;color:var(--color-text-muted);">${formatDate(c.created_at)}</td>
+            <td><a class="case-link">Open →</a></td>
+          </tr>`).join('')
+        : '<tr><td colspan="6" style="text-align:center;color:var(--color-text-light);padding:40px;">No customers found.</td></tr>';
+      document.querySelectorAll('#customers-tbody tr[data-id]').forEach(row =>
+        row.addEventListener('click', () => openCustomer(row.dataset.id))
+      );
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--color-accent);padding:20px;">Failed to load.</td></tr>';
+    }
+  }
+
+  async function openCustomer(id) {
+    const panel = document.getElementById('customer-panel');
+    panel.style.display = 'block';
+    panel.scrollIntoView({ behavior:'smooth' });
+    document.getElementById('customer-panel-content').innerHTML = '<p style="color:var(--color-text-light);">Loading…</p>';
+    try {
+      const data = await apiFetch('/api/admin/customers/' + id);
+      const c = data.customer;
+      const briefs = data.briefs || [];
+      document.getElementById('customer-panel-title').textContent = c.name || c.email;
+      document.getElementById('customer-panel-content').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:0.875rem;">
+          <div><p style="font-size:0.75rem;font-weight:600;color:var(--color-text-muted);margin-bottom:4px;">EMAIL</p><p>${c.email}</p></div>
+          <div><p style="font-size:0.75rem;font-weight:600;color:var(--color-text-muted);margin-bottom:4px;">COMPANY</p><p>${c.company||'—'}</p></div>
+          <div><p style="font-size:0.75rem;font-weight:600;color:var(--color-text-muted);margin-bottom:4px;">VERIFIED</p><p>${c.email_verified?'Yes':'No'}</p></div>
+          <div><p style="font-size:0.75rem;font-weight:600;color:var(--color-text-muted);margin-bottom:4px;">JOINED</p><p>${formatDate(c.created_at)}</p></div>
+        </div>
+        <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--color-border);display:flex;flex-direction:column;gap:14px;max-width:480px;">
+          <div class="form-field"><label>Customer type</label>
+            <select class="form-input" id="c-type">
+              <option value="normal"${(c.customer_type||'normal')==='normal'?' selected':''}>Normal</option>
+              <option value="vip"${c.customer_type==='vip'?' selected':''}>VIP</option>
+              <option value="blacklist"${c.customer_type==='blacklist'?' selected':''}>Blacklist</option>
+            </select>
+          </div>
+          <div class="form-field"><label>Internal note</label><textarea class="form-textarea" id="c-note" rows="2" placeholder="Visible to admins only…">${c.note||''}</textarea></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" onclick="saveCustomer('${c.id}')">Save</button>
+            <button class="btn btn-outline btn-sm" onclick="adminResetPassword('${c.id}','${c.email}')">Reset password</button>
+            ${c.github_id?`<button class="btn btn-sm" style="color:var(--color-accent);border-color:var(--color-accent);" onclick="unbindOAuth('${c.id}')">Unbind GitHub</button>`:''}
+          </div>
+        </div>
+        <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--color-border);">
+          <p style="font-size:0.8rem;font-weight:600;color:var(--color-text-muted);margin-bottom:10px;">BRIEFS (${briefs.length})</p>
+          ${briefs.length
+            ? `<div class="table-wrap"><table><thead><tr><th>ID</th><th>Deliverable</th><th>Status</th><th>Submitted</th></tr></thead><tbody>${briefs.map(b=>`<tr><td style="font-family:monospace;font-size:0.8rem;">#${b.quote_no||b.id.slice(0,8)}</td><td style="font-size:0.8rem;">${b.deliverable||'—'}</td><td>${statusBadge(b.status)}</td><td style="font-size:0.8rem;color:var(--color-text-muted);">${formatDate(b.created_at)}</td></tr>`).join('')}</tbody></table></div>`
+            : '<p style="color:var(--color-text-light);font-size:0.875rem;">No briefs yet.</p>'}
+        </div>`;
+    } catch(e) {
+      document.getElementById('customer-panel-content').innerHTML = '<p style="color:var(--color-accent);">Failed to load customer.</p>';
+    }
+  }
+
+  async function saveCustomer(id) {
+    try {
+      await apiFetch('/api/admin/customers/' + id, {
+        method: 'PUT',
+        body: JSON.stringify({
+          customer_type: document.getElementById('c-type').value,
+          note: document.getElementById('c-note').value,
+        }),
+      });
+      showToast('Customer saved');
+      loadCustomers();
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+  }
+
+  async function unbindOAuth(id) {
+    if (!confirm('Unbind GitHub from this account?')) return;
+    try {
+      await apiFetch('/api/admin/customers/' + id, { method:'PUT', body: JSON.stringify({ unbind_github: true }) });
+      showToast('GitHub unbound');
+      openCustomer(id);
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+  }
+
+  async function adminResetPassword(id, email) {
+    if (!confirm('Reset password for ' + email + '? A new temporary password will be generated.')) return;
+    try {
+      const r = await apiFetch('/api/admin/customers/' + id + '/reset-password', { method:'POST' });
+      window.prompt('Temporary password for ' + email + ' — copy and send it to them (also emailed if mail is configured):', r.temp_password);
+      showToast('Password reset');
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+  }
+
   // ── CASES ──
 
   async function loadAdminCases() {
@@ -373,6 +587,60 @@
     }
     document.getElementById('save-case-btn').textContent = 'Save Case';
   });
+
+  // ── SETTINGS ──
+
+  async function loadSettings() {
+    try {
+      const data = await apiFetch('/api/admin/settings');
+      const map = {};
+      (data?.settings || []).forEach(s => { map[s.key] = s.value || ''; });
+      ['company_name','contact_email','forum_url','mail_driver','mail_from','mail_from_name','smtp_host','smtp_port','smtp_secure','smtp_user']
+        .forEach(k => { const el = document.getElementById('set-' + k); if (el) el.value = map[k] || ''; });
+      toggleMailFields();
+    } catch(e) { showToast('Failed to load settings', 'error'); }
+  }
+
+  function toggleMailFields() {
+    const driver = (document.getElementById('set-mail_driver')||{}).value || 'smtp';
+    const smtpEl = document.getElementById('smtp-fields');
+    const resendEl = document.getElementById('resend-fields');
+    if (smtpEl)   smtpEl.style.display   = driver === 'smtp'   ? 'flex' : 'none';
+    if (resendEl) resendEl.style.display = driver === 'resend' ? 'flex' : 'none';
+  }
+
+  async function saveSetting(key, inputId) {
+    try {
+      const val = document.getElementById(inputId).value;
+      await apiFetch('/api/admin/settings/' + key, { method:'PUT', body: JSON.stringify({ value: val }) });
+      showToast('Saved: ' + key);
+      if (key === 'mail_driver') toggleMailFields();
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+  }
+
+  async function saveEncrypted(key, inputId) {
+    try {
+      const val = document.getElementById(inputId).value;
+      if (!val) { showToast('Enter a value first', 'error'); return; }
+      await apiFetch('/api/admin/settings/encrypted/' + key, { method:'PUT', body: JSON.stringify({ value: val }) });
+      document.getElementById(inputId).value = '';
+      showToast('🔐 Encrypted & saved: ' + key);
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+  }
+
+  async function testMail() {
+    const to = document.getElementById('test-mail-to').value.trim();
+    const resEl = document.getElementById('test-mail-result');
+    if (!to) { showToast('Enter a recipient email', 'error'); return; }
+    resEl.textContent = 'Sending…'; resEl.style.color = 'var(--color-text-muted)';
+    try {
+      await apiFetch('/api/admin/mail/test', { method:'POST', body: JSON.stringify({ to }) });
+      resEl.textContent = '✅ Sent!'; resEl.style.color = 'var(--color-text-success)';
+      showToast('Test email sent to ' + to);
+    } catch(e) {
+      resEl.textContent = '✗ ' + e.message; resEl.style.color = 'var(--color-accent)';
+    }
+  }
 
   loadAdminQuotes();
 </script>

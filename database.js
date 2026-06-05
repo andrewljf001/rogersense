@@ -183,6 +183,8 @@ async function initDB() {
   try { await query(`ALTER TABLE users ADD COLUMN reset_token TEXT`); } catch (e) {}
   try { await query(`ALTER TABLE users ADD COLUMN reset_token_expires TEXT`); } catch (e) {}
   try { await query(`ALTER TABLE quotes ADD COLUMN quoted_price REAL`); } catch (e) {}
+  try { await query(`ALTER TABLE users ADD COLUMN customer_type TEXT DEFAULT 'normal'`); } catch (e) {}
+  try { await query(`ALTER TABLE users ADD COLUMN note TEXT`); } catch (e) {}
 
   // Seed a default admin user if none exists.
   const { rows } = await query(`SELECT COUNT(*) as cnt FROM users WHERE role = 'admin'`);

@@ -76,7 +76,10 @@ async function getSetting(key, fallback = '') {
     return rows[0]?.value ?? fallback;
   } catch { return fallback; }
 }
-async function sendMail({ to, subject, html }) {
+// Best-effort by default (errors are logged, not thrown). Pass
+// { throwError: true } (e.g. the admin "send test" button) to surface
+// configuration/transport errors to the caller instead of swallowing them.
+async function sendMail({ to, subject, html }, { throwError = false } = {}) {
   try {
     const driver   = await getSetting('mail_driver', 'smtp');
     const fromAddr = (await getSetting('mail_from')) || process.env.MAIL_FROM || 'noreply@rogersense.com';
@@ -84,18 +87,28 @@ async function sendMail({ to, subject, html }) {
     const from = `${fromName} <${fromAddr}>`;
     if (driver === 'resend') {
       const apiKey = decrypt(await getSetting('resend_api_key_enc')) || process.env.RESEND_API_KEY || '';
-      if (!apiKey) { console.warn('[MAIL] resend key not set'); return; }
-      await fetchFn('https://api.resend.com/emails', {
+      if (!apiKey) {
+        if (throwError) throw new Error('Resend API key is not set');
+        console.warn('[MAIL] resend key not set'); return;
+      }
+      const resp = await fetchFn('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
         body: JSON.stringify({ from, to, subject, html }),
       });
+      if (throwError && !resp.ok) {
+        const body = await resp.text().catch(() => '');
+        throw new Error(`Resend returned ${resp.status}: ${body.slice(0, 200)}`);
+      }
     } else {
       const nodemailer = require('nodemailer');
       const host = (await getSetting('smtp_host')) || process.env.SMTP_HOST || '';
       const user = (await getSetting('smtp_user')) || process.env.SMTP_USER || '';
       const pass = decrypt(await getSetting('smtp_pass_enc')) || process.env.SMTP_PASS || '';
-      if (!host || !user || !pass) { console.warn('[MAIL] SMTP not configured; skipping mail to', to); return; }
+      if (!host || !user || !pass) {
+        if (throwError) throw new Error('SMTP is not configured (need host, username and password)');
+        console.warn('[MAIL] SMTP not configured; skipping mail to', to); return;
+      }
       const transporter = nodemailer.createTransport({
         host,
         port: parseInt((await getSetting('smtp_port')) || '587'),
@@ -107,6 +120,7 @@ async function sendMail({ to, subject, html }) {
     console.log('[MAIL] sent to', to);
   } catch (err) {
     console.error('[MAIL ERROR]', err.message);
+    if (throwError) throw err;
   }
 }
 
@@ -494,6 +508,104 @@ app.put('/api/admin/settings/encrypted/:key', auth, adminOnly, async (req, res) 
     await db.query(`INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')`,
       [req.params.key, encrypt(String(req.body.value ?? ''))]);
     res.json({ ok: true });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// Admin: send a test email using the current mail settings.
+app.post('/api/admin/mail/test', auth, adminOnly, async (req, res) => {
+  try {
+    const to = (req.body.to || '').trim();
+    if (!to) return res.status(400).json({ message: 'Recipient email required' });
+    const brand = (await getSetting('company_name')) || 'rogersense';
+    await sendMail({
+      to,
+      subject: `[${brand}] Test email`,
+      html: `<p>This is a test email from your <b>${brand}</b> admin panel.</p>` +
+            `<p>If you can read this, your mail server is configured correctly. ✅</p>`,
+    }, { throwError: true });
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// ════════════════════════════════════════════════════════════
+// ADMIN — CUSTOMERS
+// ════════════════════════════════════════════════════════════
+app.get('/api/admin/customers', auth, adminOnly, async (req, res) => {
+  try {
+    const { q, type } = req.query;
+    const where = [`u.role != 'admin'`];
+    const params = [];
+    if (type) { where.push(`u.customer_type = ?`); params.push(type); }
+    if (q) {
+      where.push(`(u.email LIKE ? OR u.name LIKE ? OR u.company LIKE ?)`);
+      const like = `%${q}%`; params.push(like, like, like);
+    }
+    const { rows } = await db.query(
+      `SELECT u.id, u.email, u.name, u.company, u.customer_type, u.email_verified, u.created_at, u.last_login_at,
+              (SELECT COUNT(*) FROM quotes q WHERE q.user_id = u.id) AS brief_count
+       FROM users u WHERE ${where.join(' AND ')} ORDER BY u.created_at DESC`,
+      params
+    );
+    res.json({ customers: rows });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+app.get('/api/admin/customers/:id', auth, adminOnly, async (req, res) => {
+  try {
+    const { rows } = await db.query(`SELECT * FROM users WHERE id = ?`, [req.params.id]);
+    const u = rows[0];
+    if (!u) return res.status(404).json({ message: 'Customer not found' });
+    const briefs = (await db.query(
+      `SELECT id, quote_no, status, deliverable, created_at FROM quotes WHERE user_id = ? ORDER BY created_at DESC`,
+      [req.params.id]
+    )).rows;
+    res.json({
+      customer: {
+        id: u.id, name: u.name, email: u.email, company: u.company || '',
+        customer_type: u.customer_type || 'normal', note: u.note || '',
+        email_verified: u.email_verified, github_id: u.github_id || null,
+        last_login_at: u.last_login_at, created_at: u.created_at,
+      },
+      briefs,
+    });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+app.put('/api/admin/customers/:id', auth, adminOnly, async (req, res) => {
+  try {
+    const { customer_type, note, unbind_github } = req.body;
+    const sets = [], params = [];
+    if (customer_type !== undefined) { sets.push(`customer_type = ?`); params.push(customer_type); }
+    if (note !== undefined)          { sets.push(`note = ?`);          params.push(note); }
+    if (unbind_github)               { sets.push(`github_id = NULL`); }
+    if (!sets.length) return res.json({ ok: true });
+    sets.push(`updated_at = datetime('now')`);
+    params.push(req.params.id);
+    await db.query(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`, params);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// Admin resets a customer's password: generate a temp password, store the
+// hash, return the plaintext once (so the admin can relay it even before
+// mail is configured), and email it best-effort.
+app.post('/api/admin/customers/:id/reset-password', auth, adminOnly, async (req, res) => {
+  try {
+    const { rows } = await db.query(`SELECT email, name FROM users WHERE id = ?`, [req.params.id]);
+    if (!rows[0]) return res.status(404).json({ message: 'Customer not found' });
+    const temp = crypto.randomBytes(9).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 10) + 'A1';
+    const hash = await bcrypt.hash(temp, 12);
+    await db.query(`UPDATE users SET password_hash = ?, updated_at = datetime('now') WHERE id = ?`, [hash, req.params.id]);
+    const brand = (await getSetting('company_name')) || 'rogersense';
+    sendMail({
+      to: rows[0].email,
+      subject: `[${brand}] Your password has been reset`,
+      html: `<p>Hi ${rows[0].name || ''},</p>` +
+            `<p>An administrator reset your password. Your temporary password is:</p>` +
+            `<p style="font-size:1.2rem;font-weight:bold;font-family:monospace">${temp}</p>` +
+            `<p>Sign in at <a href="${SITE_URL}/login.html">${SITE_URL}/login.html</a> and change it from your profile.</p>`,
+    });
+    res.json({ ok: true, temp_password: temp, email: rows[0].email });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
