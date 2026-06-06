@@ -20,7 +20,9 @@ const fetchFn = global.fetch || require('node-fetch');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
-const SITE_URL   = (process.env.SITE_URL || `http://localhost:${PORT}`).replace(/\/$/, '');
+const SITE_URL_RAW = process.env.SITE_URL || '';
+const SITE_URL   = (SITE_URL_RAW || `http://localhost:${PORT}`).replace(/\/$/, '');
+const SEO_SITE_URL = (process.env.SEO_SITE_URL || SITE_URL_RAW || 'https://rogersense.com').replace(/\/$/, '');
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-insecure-secret-change-me';
 const JWT_TTL    = '7d';
 
@@ -613,6 +615,64 @@ app.post('/api/admin/customers/:id/reset-password', auth, adminOnly, async (req,
 // STATIC FRONTEND (explicit whitelist — never serve server.js/.env)
 // ════════════════════════════════════════════════════════════
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
+
+function xmlEscape(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+const SITEMAP_PATHS = [
+  '/',
+  '/shop.html',
+  '/cases.html',
+  '/blog.html',
+  '/about.html',
+  '/quote.html',
+  '/case-detail.html?slug=autonomous-warehouse-robot-lidar',
+  '/product.html?slug=lidar-s1',
+  '/blog-post.html?slug=semi-solid-state-lidar-explained',
+];
+
+function canonicalUrl(pathname) {
+  return new URL(pathname, SEO_SITE_URL + '/').toString();
+}
+
+app.get('/robots.txt', (_req, res) => {
+  res.type('text/plain').send([
+    'User-agent: *',
+    'Allow: /',
+    `Sitemap: ${canonicalUrl('/sitemap.xml')}`,
+    '',
+  ].join('\n'));
+});
+
+app.get('/sitemap.xml', (_req, res) => {
+  const urls = SITEMAP_PATHS
+    .map(pathname => `<url><loc>${xmlEscape(canonicalUrl(pathname))}</loc></url>`)
+    .join('\n');
+  res.type('application/xml').send([
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    urls,
+    '</urlset>',
+    '',
+  ].join('\n'));
+});
+
+app.get('/sitemap_index.xml', (_req, res) => {
+  res.type('application/xml').send([
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    `<sitemap><loc>${xmlEscape(canonicalUrl('/sitemap.xml'))}</loc></sitemap>`,
+    '</sitemapindex>',
+    '',
+  ].join('\n'));
+});
+
 // Only `.html` page routes (+ `/`) — extensionless aliases are intentionally
 // omitted so they never collide with API routes like GET /cases.
 const PAGES = ['index', 'cases', 'case-detail', 'quote', 'about', 'login', 'dashboard', 'admin'];

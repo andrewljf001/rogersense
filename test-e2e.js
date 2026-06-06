@@ -40,6 +40,22 @@ async function waitForHealth(timeoutMs = 8000) {
 }
 
 async function run() {
+  // ── SEO routes ───────────────────────────────────────────
+  const robots = await fetch(BASE + '/robots.txt');
+  const robotsText = await robots.text();
+  check('robots.txt → 200 text', robots.status === 200 && robotsText.includes('User-agent: *'));
+  check('robots.txt declares sitemap', robotsText.includes('Sitemap: https://rogersense.com/sitemap.xml'));
+
+  const sitemap = await fetch(BASE + '/sitemap.xml');
+  const sitemapText = await sitemap.text();
+  check('sitemap.xml → 200 XML urlset', sitemap.status === 200 && sitemapText.includes('<urlset'));
+  check('sitemap.xml includes canonical home', sitemapText.includes('<loc>https://rogersense.com/</loc>'));
+
+  const sitemapIndex = await fetch(BASE + '/sitemap_index.xml');
+  const sitemapIndexText = await sitemapIndex.text();
+  check('sitemap_index.xml → 200 XML index', sitemapIndex.status === 200 && sitemapIndexText.includes('<sitemapindex'));
+  check('sitemap_index.xml points to sitemap.xml', sitemapIndexText.includes('<loc>https://rogersense.com/sitemap.xml</loc>'));
+
   // ── Auth ──────────────────────────────────────────────────
   const reg = await req('POST', '/auth/register', { body: { name: 'Jane Tester', email: 'jane@test.com', password: 'password123' } });
   check('register client → 200 + token', reg.status === 200 && !!reg.data?.token, `status=${reg.status}`);
