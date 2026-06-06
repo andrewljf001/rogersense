@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title id="page-title">Product — Rogersense</title>
+  <meta name="description" id="meta-desc" content="Rogersense store product."/>
+  <link rel="stylesheet" href="assets/style.css"/>
+  <style>
+    .crumb{font-size:.8rem;color:var(--color-text-light);margin-bottom:20px;}
+    .crumb a{color:var(--color-text-muted);} .crumb a:hover{color:var(--color-text);}
+    .pdp{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:40px;align-items:start;}
+    @media(max-width:860px){.pdp{grid-template-columns:1fr;gap:28px;}}
+    /* gallery */
+    .g-main{aspect-ratio:4/3;background:var(--color-bg-2);border:1px solid var(--color-border);border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+    .g-main img{width:100%;height:100%;object-fit:cover;cursor:zoom-in;}
+    .g-thumbs{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;}
+    .g-thumb{width:72px;height:72px;border-radius:8px;overflow:hidden;border:1.5px solid var(--color-border);cursor:pointer;background:var(--color-bg-2);}
+    .g-thumb.active{border-color:#0d9488;}
+    .g-thumb img{width:100%;height:100%;object-fit:cover;}
+    /* summary */
+    .p-title{font-size:clamp(1.4rem,3.5vw,1.9rem);line-height:1.25;margin:0 0 10px;}
+    .p-rating{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:.85rem;color:var(--color-text-muted);}
+    .stars{color:#f59e0b;letter-spacing:2px;font-size:1rem;}
+    .stars .off{color:var(--color-border);}
+    .p-price{font-size:1.7rem;font-weight:800;margin:6px 0;}
+    .p-stock{font-size:.82rem;color:var(--color-text-light);margin-bottom:16px;}
+    .p-stock.out{color:#c0392b;}
+    .p-summary{color:var(--color-text-muted);line-height:1.7;margin-bottom:22px;}
+    .buy-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+    .qty{display:flex;align-items:center;border:1px solid var(--color-border);border-radius:8px;overflow:hidden;}
+    .qty button{width:38px;height:44px;border:none;background:var(--color-bg-2);color:var(--color-text);font-size:1.1rem;cursor:pointer;}
+    .qty input{width:50px;height:44px;border:none;text-align:center;font:inherit;background:var(--color-bg);color:var(--color-text);}
+    .p-meta{font-size:.82rem;color:var(--color-text-light);border-top:1px solid var(--color-border);padding-top:16px;margin-top:6px;}
+    .p-meta a{color:#0d9488;}
+    .wa-ask{font-size:.85rem;margin:6px 0 18px;}
+    .dl-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1.5px solid #0d9488;color:#0d9488;background:#0d94881a;border-radius:8px;font-weight:700;font-size:.85rem;}
+    /* tabs */
+    .tabs{margin-top:48px;border-top:1px solid var(--color-border);}
+    .tabs-nav{display:flex;gap:8px;border-bottom:1px solid var(--color-border);}
+    .tabs-nav button{background:none;border:none;padding:16px 18px;font:inherit;font-weight:600;color:var(--color-text-muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;}
+    .tabs-nav button.active{color:var(--color-text);border-bottom-color:#0d9488;}
+    .tab-panel{display:none;padding:28px 0;}
+    .tab-panel.active{display:block;}
+    .prose{font-size:.95rem;line-height:1.7;color:var(--color-text);max-width:760px;}
+    .prose h3{font-size:1.05rem;margin:1.2em 0 .4em;font-weight:600;}
+    .prose ul{margin:0 0 1em 1.2em;} .prose li{margin:0 0 .35em;}
+    .prose table{width:100%;border-collapse:collapse;margin:.5em 0 1.2em;font-size:.88rem;max-width:560px;}
+    .prose td{border:1px solid var(--color-border);padding:7px 11px;} .prose td:first-child{color:var(--color-text-muted);width:42%;}
+    /* reviews */
+    .rv{border-bottom:1px solid var(--color-border);padding:16px 0;}
+    .rv-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;}
+    .rv-name{font-weight:600;font-size:.9rem;}
+    .rv-date{font-size:.75rem;color:var(--color-text-light);}
+    .rv-body{font-size:.9rem;color:var(--color-text-muted);margin-top:6px;line-height:1.6;white-space:pre-wrap;}
+    .rv-form{background:var(--color-bg-2);border:1px solid var(--color-border);border-radius:12px;padding:22px;margin-top:24px;max-width:560px;}
+    .rv-form .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .rv-form label{display:block;font-size:.8rem;font-weight:600;margin-bottom:5px;}
+    .rv-form input,.rv-form textarea{width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:8px;font:inherit;background:var(--color-bg);}
+    .star-pick{font-size:1.5rem;color:var(--color-border);cursor:pointer;letter-spacing:3px;}
+    .star-pick .on{color:#f59e0b;}
+    /* modal (checkout / lightbox) */
+    .modal-overlay{position:fixed;inset:0;background:rgba(10,15,25,.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+    .modal-overlay.open{display:flex;}
+    .modal{background:var(--color-bg);border-radius:14px;max-width:520px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 24px 60px rgba(0,0,0,.35);}
+    .modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--color-border);}
+    .modal-x{background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--color-text-light);}
+    .modal-body{padding:22px;}
+    .field{margin-bottom:14px;} .field label{display:block;font-size:.8rem;font-weight:600;margin-bottom:5px;}
+    .field input{width:100%;padding:10px 13px;border:1px solid var(--color-border);border-radius:8px;font:inherit;}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;z-index:1100;}
+    .lightbox.open{display:flex;} .lightbox img{max-width:92vw;max-height:90vh;border-radius:10px;}
+    /* keep Apple Pay / Google Pay buttons the same height */
+    #googlepay-container{height:44px;}
+    #googlepay-container button{height:44px !important;width:100% !important;}
+  </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-FN79CFWQP1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-FN79CFWQP1');
+</script>
+  <link rel="icon" href="/favicon.svg?v=20260606" type="image/svg+xml"/>
+</head>
+<body>
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo"><span class="nav-logo-name">Rogersense</span><span class="nav-logo-sub">System Solutions</span></a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it works</a></li>
+      <li><a href="shop.html" class="active">Store</a></li>
+      <li><a href="cases.html">Cases</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-actions"></div>
+    <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="nav-drawer" id="nav-drawer">
+  <div class="nav-drawer-overlay" id="drawer-overlay"></div>
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="drawer-close">✕</button>
+    <a href="/">Home</a><a href="/#how-it-works">How it works</a><a href="shop.html">Store</a><a href="cases.html">Cases</a><a href="blog.html">Blog</a><a href="about.html">About</a><a href="contact.html">Contact</a>
+    <a href="https://forum.rogersense.com" target="_blank">Forum</a>
+  </div>
+</div>
+
+<section class="section" style="padding-top:32px;">
+  <div class="container">
+    <div class="crumb"><a href="/">Home</a> / <a href="shop.html">Store</a> / <span id="crumb-name">…</span></div>
+    <div id="pdp-root">
+      <p style="text-align:center;color:var(--color-text-light);padding:60px 0;">Loading…</p>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <p class="footer-brand-name">Rogersense</p>
+        <p class="footer-brand-desc">End-to-end product engineering.<br>Hardware · Firmware · Mechanical.</p>
+      </div>
+      <div class="footer-col"><h4>Explore</h4><ul>
+        <li><a href="shop.html">Store</a></li>
+        <li><a href="cases.html">Cases</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>Company</h4><ul>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="quote.html">Get a Quote</a></li>
+        <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul>
+        <li><a href="privacy.html">Privacy Policy</a></li><li><a href="terms.html">Terms of Service</a></li>
+        <li><a href="returns.html">Returns &amp; Refunds</a></li>
+        <li><a href="shipping.html">Shipping</a></li>
+        <li><a href="gdpr.html">Data Deletion</a></li>
+      </ul></div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Rogersense.</span>
+      <span>Custom engineering · In-stock hardware</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Checkout modal -->
+<div class="modal-overlay" id="checkout-modal">
+  <div class="modal">
+    <div class="modal-head"><h2 style="font-size:1.1rem;margin:0;">Checkout</h2><button class="modal-x" data-close>✕</button></div>
+    <div class="modal-body">
+      <div id="co-summary" style="background:var(--color-bg-2);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:.9rem;"></div>
+
+      <!-- Inline auth (shown when not logged in) -->
+      <div id="co-auth" style="display:none;">
+        <p style="font-size:.85rem;color:var(--color-text-muted);margin-bottom:12px;">Sign in or create an account to place your order.</p>
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+          <button type="button" class="btn btn-primary btn-sm" id="co-tab-register" style="flex:1;">Create account</button>
+          <button type="button" class="btn btn-outline btn-sm" id="co-tab-login" style="flex:1;">Sign in</button>
+        </div>
+        <div class="field" id="co-au-name-f"><label>Full name</label><input id="co-au-name"/></div>
+        <div class="field"><label>Email</label><input id="co-au-email" type="email"/></div>
+        <div class="field"><label>Password</label><input id="co-au-password" type="password" placeholder="At least 8 characters"/></div>
+        <div data-turnstile data-ts="coauth" style="display:none;margin-bottom:12px;"></div>
+        <button type="button" class="btn btn-primary btn-lg" style="width:100%;" id="co-au-submit">Create account &amp; continue</button>
+        <p id="co-au-error" style="font-size:.8rem;color:var(--color-accent);margin-top:8px;display:none;"></p>
+      </div>
+
+      <form id="checkout-form" style="display:none;">
+        <div class="field"><label>Email</label><input type="email" id="co-email" required placeholder="you@example.com"/></div>
+        <div class="field"><label>Recipient name</label><input id="co-recipient" required/></div>
+        <div class="field"><label>Phone</label><input id="co-phone"/></div>
+        <div class="field"><label>Shipping address</label><input id="co-address" required/></div>
+        <div class="row2"><div class="field"><label>City</label><input id="co-city" required/></div>
+          <div class="field"><label>Country</label><input id="co-country" value="US" required/></div></div>
+        <div id="pay-methods" style="margin-top:8px;">
+          <div id="applepay-container" style="margin-bottom:10px;"></div>
+          <div id="googlepay-container" style="margin-bottom:10px;"></div>
+          <div id="paypal-buttons" style="margin-bottom:10px;"></div>
+          <button type="submit" class="btn btn-outline btn-lg" style="width:100%;" id="co-submit">Pay with PayPal (redirect) →</button>
+          <p id="co-pay-note" style="font-size:.75rem;color:var(--color-text-light);text-align:center;margin-top:10px;">Pay securely. Apple Pay / Google Pay appear on supported devices.</p>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="lightbox" id="lightbox"><img id="lb-img" src="" alt=""/></div>
+
+<script src="assets/main.js?v=4"></script>
+<script>
+  const slug = new URLSearchParams(location.search).get('slug');
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const money = (v, cur='USD') => `${cur==='USD'?'$':''}${Number(v).toFixed(2)}${cur!=='USD'?' '+cur:''}`;
+  let PRODUCT = null, WA = '';
+
+  function stars(avg) {
+    const full = Math.round(avg);
+    return `<span class="stars">${'★'.repeat(full)}<span class="off">${'★'.repeat(5-full)}</span></span>`;
+  }
+  apiFetch('/api/settings/public').then(c => { WA = (c.whatsapp_number||'').replace(/[^0-9]/g,''); }).catch(()=>{});
+
+  const pp = new URLSearchParams(location.search);
+  if (pp.get('payment') === 'success') showToast('Payment received — thank you!', 'success', 6000);
+  if (pp.get('payment') === 'cancelled') showToast('Payment cancelled.', 'error', 4000);
+
+  const notFound = () => document.getElementById('pdp-root').innerHTML = '<p style="text-align:center;padding:60px 0;">Product not found. <a href="shop.html">Back to Store →</a></p>';
+  async function load() {
+    if (!slug) { notFound(); return; }
+    let p;
+    try { p = (await apiFetch('/api/products/' + encodeURIComponent(slug)) || {}).product; }
+    catch (e) { notFound(); return; }      // genuine fetch / 404 failure
+    if (!p) { notFound(); return; }
+    PRODUCT = p;
+    let rv = { reviews: [], count: 0, average: 0 };
+    try { rv = await apiFetch('/api/products/' + encodeURIComponent(slug) + '/reviews') || rv; } catch (_) {}
+    try { render(p, rv); }                  // render errors must NOT show "not found"
+    catch (e) { console.error('[PDP render]', e); }
+  }
+
+  function render(p, rv) {
+    document.getElementById('page-title').textContent = p.name + ' — Rogersense';
+    document.getElementById('meta-desc').setAttribute('content', p.summary || p.name);
+    document.getElementById('crumb-name').textContent = p.name;
+    const imgs = (p.images && p.images.length) ? p.images : (p.cover_image ? [p.cover_image] : []);
+    const out = p.stock === 0;
+    const avg = rv.average || p.rating_avg || 0, count = rv.count || 0;
+    const dl = (p.downloads && p.downloads.length) ? p.downloads[0] : null;
+
+    document.getElementById('pdp-root').innerHTML = `
+      <div class="pdp">
+        <div>
+          <div class="g-main"><img id="g-main-img" src="${esc(imgs[0]||'')}" alt="${esc(p.name)}"/></div>
+          ${imgs.length>1 ? `<div class="g-thumbs">${imgs.map((u,i)=>`<div class="g-thumb ${i===0?'active':''}" data-img="${esc(u)}"><img src="${esc(u)}" alt=""/></div>`).join('')}</div>`:''}
+        </div>
+        <div>
+          <h1 class="p-title">${esc(p.name)}</h1>
+          <div class="p-rating">${stars(avg)} ${count?`<a href="#reviews" id="goto-reviews" style="color:var(--color-text-muted);">${avg} · ${count} review${count>1?'s':''}</a>`:'<span>No reviews yet</span>'}</div>
+          <div class="p-price">${money(p.price, p.currency)}</div>
+          <div class="p-stock ${out?'out':''}">${out?'Out of stock':(p.stock>0?p.stock+' in stock':'In stock')}</div>
+          <p class="p-summary">${esc(p.summary||'')}</p>
+          <div class="buy-row">
+            <div class="qty"><button type="button" id="q-minus">−</button><input id="q-input" type="number" min="1" value="1"/><button type="button" id="q-plus">+</button></div>
+            <button class="btn btn-primary btn-lg" id="buy-btn" ${out?'disabled':''}>${out?'Sold out':'Buy now →'}</button>
+            ${dl?`<a class="dl-btn" href="${esc(dl.url)}" target="_blank" rel="noopener"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</a>`:''}
+          </div>
+          <p class="wa-ask" id="wa-ask" style="display:none;">Questions? <a id="wa-link" href="#" target="_blank" rel="noopener" style="font-weight:600;">Chat with us on WhatsApp →</a></p>
+          <div class="p-meta">
+            ${p.category?`<div>Category: ${esc(p.category)}</div>`:''}
+            <div style="margin-top:6px;">Custom requirements? <a href="quote.html">Submit a brief →</a></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tabs-nav">
+          <button class="active" data-tab="desc">Description</button>
+          <button data-tab="reviews" id="reviews">Reviews (${count})</button>
+        </div>
+        <div class="tab-panel active" id="panel-desc"><div class="prose">${p.description || '<p>'+esc(p.summary||'')+'</p>'}</div></div>
+        <div class="tab-panel" id="panel-reviews">
+          <div id="rv-list">${renderReviews(rv.reviews||[])}</div>
+          <form class="rv-form" id="rv-form">
+            <h3 style="font-size:1rem;margin:0 0 14px;">Write a review</h3>
+            <div class="field"><label>Your rating</label><div class="star-pick" id="star-pick" data-val="5">${'★'.repeat(5)}</div></div>
+            <div class="row2">
+              <div class="field"><label>Name</label><input id="rv-name" required/></div>
+              <div class="field"><label>Email <span style="font-weight:400;color:var(--color-text-light);">(not shown)</span></label><input id="rv-email" type="email"/></div>
+            </div>
+            <div class="field"><label>Review</label><textarea id="rv-comment" rows="4" required></textarea></div>
+            <div data-turnstile style="display:none;margin-bottom:14px;"></div>
+            <button type="submit" class="btn btn-primary" id="rv-submit">Submit review</button>
+            <span id="rv-result" style="font-size:.85rem;margin-left:10px;"></span>
+          </form>
+        </div>
+      </div>`;
+
+    wire(p);
+  }
+
+  function renderReviews(list) {
+    if (!list.length) return '<p style="color:var(--color-text-light);">No reviews yet — be the first to review this product.</p>';
+    return list.map(r => `<div class="rv">
+      <div class="rv-head"><span class="rv-name">${esc(r.author_name)}</span><span class="rv-date">${formatDate(r.created_at)}</span></div>
+      ${stars(r.rating)}
+      <div class="rv-body">${esc(r.comment)}</div></div>`).join('');
+  }
+
+  function wire(p) {
+    // gallery thumbs
+    document.querySelectorAll('.g-thumb').forEach(t => t.addEventListener('click', () => {
+      document.getElementById('g-main-img').src = t.dataset.img;
+      document.querySelectorAll('.g-thumb').forEach(x=>x.classList.remove('active')); t.classList.add('active');
+    }));
+    document.getElementById('g-main-img').addEventListener('click', e => {
+      document.getElementById('lb-img').src = e.target.src; document.getElementById('lightbox').classList.add('open');
+    });
+    document.getElementById('lightbox').addEventListener('click', () => document.getElementById('lightbox').classList.remove('open'));
+    // qty
+    const qi = document.getElementById('q-input');
+    document.getElementById('q-minus').onclick = () => qi.value = Math.max(1, (parseInt(qi.value)||1)-1);
+    document.getElementById('q-plus').onclick = () => qi.value = (parseInt(qi.value)||1)+1;
+    // whatsapp
+    if (WA) { document.getElementById('wa-ask').style.display='block'; document.getElementById('wa-link').href = 'https://wa.me/'+WA; }
+    // tabs
+    document.querySelectorAll('.tabs-nav button').forEach(b => b.addEventListener('click', () => {
+      document.querySelectorAll('.tabs-nav button').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+      document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));
+      document.getElementById('panel-'+b.dataset.tab).classList.add('active');
+    }));
+    const gr = document.getElementById('goto-reviews');
+    if (gr) gr.addEventListener('click', e => { e.preventDefault(); document.querySelector('[data-tab="reviews"]').click(); document.querySelector('.tabs').scrollIntoView({behavior:'smooth'}); });
+    // buy
+    document.getElementById('buy-btn').addEventListener('click', () => openCheckout(p));
+    // star picker
+    const sp = document.getElementById('star-pick');
+    sp.innerHTML = Array.from({length:5},(_,i)=>`<span data-i="${i+1}" class="on">★</span>`).join('');
+    function paint(v){ sp.querySelectorAll('span').forEach(s=>s.classList.toggle('on', parseInt(s.dataset.i)<=v)); sp.dataset.val=v; }
+    sp.querySelectorAll('span').forEach(s => s.addEventListener('click', ()=>paint(parseInt(s.dataset.i))));
+    paint(5);
+    // turnstile + review submit
+    if (typeof mountTurnstile === 'function') mountTurnstile(document.querySelector('#rv-form [data-turnstile]'));
+    document.getElementById('rv-form').addEventListener('submit', submitReview);
+  }
+
+  // Inline auth in checkout (ordering requires an account; can register right here)
+  let coAuthMode = 'register';
+  const coAuthTs = () => document.querySelector('#co-auth [data-turnstile]');
+  function showCheckoutStep() {
+    document.getElementById('co-auth').style.display = 'none';
+    document.getElementById('checkout-form').style.display = 'block';
+    const u = Auth.getUser && Auth.getUser();
+    if (u){ document.getElementById('co-email').value=u.email||''; document.getElementById('co-recipient').value=u.name||''; }
+    initPayments();
+  }
+
+  // ── Wallet payments via PayPal SDK (PayPal / Apple Pay / Google Pay) ──
+  let lastOrderNo = '', paymentsInited = false, PAY_ENV = 'PRODUCTION';
+  function loadScript(src) {
+    return new Promise((res, rej) => {
+      if ([...document.scripts].some(s => s.src === src)) return res();
+      const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s);
+    });
+  }
+  function orderBody() {
+    for (const id of ['co-email','co-recipient','co-address','co-city','co-country']) {
+      const el = document.getElementById(id);
+      if (!el.value.trim()) { el.focus(); showToast('Please complete the shipping details first.', 'error'); return null; }
+    }
+    return {
+      slug: PRODUCT.slug, qty: parseInt(document.getElementById('q-input').value) || 1,
+      buyer_email: document.getElementById('co-email').value.trim(),
+      buyer_name: document.getElementById('co-recipient').value.trim(),
+      ship_recipient: document.getElementById('co-recipient').value.trim(),
+      ship_phone: document.getElementById('co-phone').value.trim(),
+      ship_address: document.getElementById('co-address').value.trim(),
+      ship_city: document.getElementById('co-city').value.trim(),
+      ship_country: document.getElementById('co-country').value.trim() || 'US',
+    };
+  }
+  const orderTotal = () => (Number(PRODUCT.price) || 0) * (parseInt(document.getElementById('q-input').value) || 1);
+  async function createOrderApi() {
+    const body = orderBody(); if (!body) throw new Error('incomplete');
+    const d = await apiFetch('/api/payment/create-order', { method:'POST', body: JSON.stringify(body) });
+    lastOrderNo = d.order_no; return d.id;
+  }
+  async function captureAndFinish(ppId) {
+    await apiFetch('/api/payment/capture-order', { method:'POST', body: JSON.stringify({ order_no: lastOrderNo, paypal_order_id: ppId }) });
+    location.href = '/track.html?order=' + encodeURIComponent(lastOrderNo);
+  }
+  async function initPayments() {
+    if (paymentsInited) return;
+    let cfg; try { cfg = await apiFetch('/api/payment/config'); } catch { return; }
+    if (!cfg || !cfg.clientId) return;            // PayPal not configured → keep redirect button only
+    paymentsInited = true;
+    PAY_ENV = cfg.mode === 'sandbox' ? 'TEST' : 'PRODUCTION';
+    try { await loadScript(`https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(cfg.clientId)}&components=buttons,applepay,googlepay&currency=USD&intent=capture&disable-funding=paylater,credit`); }
+    catch { return; }
+    renderPayPalButtons();
+    initApplePay().catch(() => {});
+    initGooglePay().catch(() => {});
+  }
+  function renderPayPalButtons() {
+    if (!window.paypal || !paypal.Buttons) return;
+    try {
+      paypal.Buttons({
+        style: { layout: 'vertical', height: 44, label: 'paypal' },
+        createOrder: () => createOrderApi(),
+        onApprove: (data) => captureAndFinish(data.orderID),
+        onError: () => showToast('Payment error — please try again.', 'error'),
+      }).render('#paypal-buttons');
+      // SDK buttons available → de-emphasize the redirect fallback
+      document.getElementById('co-submit').style.display = 'none';
+    } catch (_) {}
+  }
+  async function initApplePay() {
+    const c = document.getElementById('applepay-container');
+    const note = m => { console.log('[ApplePay]', m); };   // silent for customers; logs to console
+    if (!window.ApplePaySession) { console.log('[ApplePay] ApplePaySession not available'); return; }   // not Safari/Apple → silent
+    if (!ApplePaySession.canMakePayments()) { note('no Apple Pay card/capability on this device (add a card to Wallet, or use iPhone).'); return; }
+    if (!window.paypal || !paypal.Applepay) { note('PayPal applepay component did not load.'); return; }
+    const applepay = paypal.Applepay();
+    let cfg;
+    try { cfg = await applepay.config(); } catch (e) { note('config() error: ' + (e && e.message || e)); return; }
+    console.log('[ApplePay] config:', cfg);
+    if (!cfg.isEligible) { note('isEligible = false → Apple Pay is NOT enabled on the PayPal account (enable it in PayPal, or domain not registered).'); return; }
+    await loadScript('https://applepay.cdn-apple.com/jsapi/v1/apple-pay-sdk.js').catch(() => {});
+    c.innerHTML = '<apple-pay-button buttonstyle="black" type="buy" locale="en-US" style="display:block;--apple-pay-button-width:100%;--apple-pay-button-height:44px;"></apple-pay-button>';
+    c.querySelector('apple-pay-button').addEventListener('click', () => {
+      // Must create + begin the session SYNCHRONOUSLY inside the click gesture.
+      const body = orderBody(); if (!body) return;
+      let session;
+      try {
+        session = new ApplePaySession(4, {
+          countryCode: cfg.countryCode || 'US', currencyCode: 'USD',
+          merchantCapabilities: cfg.merchantCapabilities, supportedNetworks: cfg.supportedNetworks,
+          total: { label: 'Rogersense', amount: orderTotal().toFixed(2) },
+        });
+      } catch (e) { console.log('[ApplePay] session create failed:', e); showToast('Apple Pay could not start.', 'error'); return; }
+      session.onvalidatemerchant = async (e) => {
+        try { const m = await applepay.validateMerchant({ validationUrl: e.validationURL, displayName: 'Rogersense' }); session.completeMerchantValidation(m.merchantSession); }
+        catch (err) { console.log('[ApplePay] validateMerchant failed:', err); session.abort(); showToast('Apple Pay validation failed.', 'error'); }
+      };
+      session.onpaymentauthorized = async (e) => {
+        try {
+          const d = await apiFetch('/api/payment/create-order', { method:'POST', body: JSON.stringify(body) });
+          lastOrderNo = d.order_no;
+          await applepay.confirmOrder({ orderId: d.id, token: e.payment.token, billingContact: e.payment.billingContact });
+          session.completePayment(ApplePaySession.STATUS_SUCCESS);
+          await captureAndFinish(d.id);
+        } catch (err) { console.log('[ApplePay] confirm/capture failed:', err); session.completePayment(ApplePaySession.STATUS_FAILURE); showToast('Apple Pay payment failed.', 'error'); }
+      };
+      session.begin();
+    });
+  }
+  async function initGooglePay() {
+    if (!window.paypal || !paypal.Googlepay) return;
+    const gp = paypal.Googlepay();
+    const cfg = await gp.config();
+    if (!cfg.isEligible) return;
+    await loadScript('https://pay.google.com/gp/p/js/pay.js');
+    const client = new google.payments.api.PaymentsClient({ environment: PAY_ENV });
+    const ready = await client.isReadyToPay({ apiVersion: 2, apiVersionMinor: 0, allowedPaymentMethods: cfg.allowedPaymentMethods });
+    if (!ready.result) return;
+    const btn = client.createButton({ buttonSizeMode: 'fill', buttonType: 'buy', onClick: onGooglePay });
+    document.getElementById('googlepay-container').appendChild(btn);
+    async function onGooglePay() {
+      let ppId; try { ppId = await createOrderApi(); } catch { return; }
+      try {
+        const paymentData = await client.loadPaymentData({
+          apiVersion: 2, apiVersionMinor: 0,
+          allowedPaymentMethods: cfg.allowedPaymentMethods, merchantInfo: cfg.merchantInfo,
+          transactionInfo: { totalPriceStatus: 'FINAL', totalPrice: orderTotal().toFixed(2), currencyCode: 'USD', countryCode: 'US' },
+        });
+        const conf = await gp.confirmOrder({ orderId: ppId, paymentMethodData: paymentData.paymentMethodData });
+        if (conf.status === 'APPROVED' || conf.status === 'PAYER_ACTION_REQUIRED') await captureAndFinish(ppId);
+        else showToast('Google Pay was not approved.', 'error');
+      } catch (err) { if (err && err.statusCode !== 'CANCELED') showToast('Google Pay payment failed.', 'error'); }
+    }
+  }
+  function setAuthMode(mode) {
+    coAuthMode = mode;
+    document.getElementById('co-au-name-f').style.display = mode==='register' ? 'block' : 'none';
+    document.getElementById('co-au-submit').textContent = mode==='register' ? 'Create account & continue' : 'Sign in & continue';
+    document.getElementById('co-tab-register').className = 'btn btn-sm ' + (mode==='register'?'btn-primary':'btn-outline');
+    document.getElementById('co-tab-login').className = 'btn btn-sm ' + (mode==='login'?'btn-primary':'btn-outline');
+  }
+  function openCheckout(p) {
+    document.getElementById('co-summary').innerHTML = `<b>${esc(p.name)}</b> × <span id="co-qty-disp">${document.getElementById('q-input').value}</span> — ${money(p.price,p.currency)} each`;
+    if (Auth.isLoggedIn()) {
+      showCheckoutStep();
+    } else {
+      document.getElementById('checkout-form').style.display = 'none';
+      document.getElementById('co-auth').style.display = 'block';
+      setAuthMode('register');
+      if (typeof mountTurnstile === 'function') mountTurnstile(coAuthTs());
+    }
+    document.getElementById('checkout-modal').classList.add('open');
+  }
+  document.getElementById('co-tab-register').addEventListener('click', () => setAuthMode('register'));
+  document.getElementById('co-tab-login').addEventListener('click', () => setAuthMode('login'));
+  document.getElementById('co-au-submit').addEventListener('click', async () => {
+    const err = document.getElementById('co-au-error'); err.style.display='none';
+    const name = document.getElementById('co-au-name').value.trim();
+    const email = document.getElementById('co-au-email').value.trim();
+    const pw = document.getElementById('co-au-password').value;
+    const token = (typeof turnstileToken === 'function' ? turnstileToken(coAuthTs()) : '');
+    const btn = document.getElementById('co-au-submit'); btn.disabled = true;
+    try {
+      if (coAuthMode === 'register') {
+        if (!name || !email || !pw) throw new Error('Please fill in all fields.');
+        await AuthAPI.register(name, email, pw, token);
+      } else {
+        if (!email || !pw) throw new Error('Please enter email and password.');
+        await AuthAPI.login(email, pw, token);
+      }
+      showCheckoutStep();
+    } catch(e) {
+      err.textContent = e.message || 'Failed. Please try again.'; err.style.display='block';
+      if (typeof turnstileReset === 'function') turnstileReset(coAuthTs());
+    } finally { btn.disabled = false; }
+  });
+  document.getElementById('checkout-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('co-submit'); btn.disabled=true; btn.textContent='Creating order…';
+    try {
+      const body = { slug: PRODUCT.slug, qty: parseInt(document.getElementById('q-input').value)||1,
+        buyer_email: document.getElementById('co-email').value.trim(),
+        ship_recipient: document.getElementById('co-recipient').value.trim(),
+        buyer_name: document.getElementById('co-recipient').value.trim(),
+        ship_phone: document.getElementById('co-phone').value.trim(),
+        ship_address: document.getElementById('co-address').value.trim(),
+        ship_city: document.getElementById('co-city').value.trim(),
+        ship_country: document.getElementById('co-country').value.trim()||'US' };
+      const data = await apiFetch('/api/products/buy', { method:'POST', body: JSON.stringify(body) });
+      if (data && data.approve_url) { window.location.href = data.approve_url; return; }
+      throw new Error('No payment URL');
+    } catch(err){ showToast(err.message||'Checkout failed','error',5000); btn.disabled=false; btn.textContent='Pay with PayPal →'; }
+  });
+
+  async function submitReview(e) {
+    e.preventDefault();
+    const out = document.getElementById('rv-result'), btn = document.getElementById('rv-submit');
+    btn.disabled = true;
+    try {
+      const tsEl = document.querySelector('#rv-form [data-turnstile]');
+      const resp = await apiFetch('/api/products/'+encodeURIComponent(slug)+'/reviews', { method:'POST', body: JSON.stringify({
+        author_name: document.getElementById('rv-name').value.trim(),
+        email: document.getElementById('rv-email').value.trim(),
+        rating: parseInt(document.getElementById('star-pick').dataset.val)||5,
+        comment: document.getElementById('rv-comment').value.trim(),
+        cf_turnstile: (typeof turnstileToken === 'function' ? turnstileToken(tsEl) : ''),
+      })});
+      out.style.color='var(--color-text-success)'; out.textContent = resp.message || 'Thanks — your review is awaiting approval.';
+      document.getElementById('rv-form').reset();
+      document.getElementById('star-pick').querySelectorAll('span').forEach(s=>s.classList.add('on'));
+    } catch(err){ out.style.color='var(--color-accent)'; out.textContent=err.message; if (typeof turnstileReset==='function') turnstileReset(document.querySelector('#rv-form [data-turnstile]')); }
+    finally { btn.disabled=false; }
+  }
+
+  document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => document.getElementById('checkout-modal').classList.remove('open')));
+  // Checkout modal closes only via the ✕ button (not on backdrop click) so it stays put while paying.
+  load();
+</script>
+</body>
+</html>

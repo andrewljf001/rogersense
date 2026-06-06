@@ -57,7 +57,7 @@ The earlier draft of this document planned a Workers-serverless backend. We are 
 | Hosting | Served by the same Node/Express process via `express.static` (or Nginx static), behind Cloudflare |
 | Repo | `andrewljf001/rogersense` (frontend + backend in one repo) |
 | Style | **Deep Navy + Electric Teal** design system in `assets/style.css` — locked, do not restyle |
-| URL | `[BRAND].com` (custom domain via Cloudflare) |
+| URL | `rogersense.com` (custom domain via Cloudflare) |
 
 ### Pages
 
@@ -210,6 +210,7 @@ Free tier: 10GB storage, 1M writes/month, zero egress.
   cases/{case_id}/{n}.jpg            ← case photos
   messages/{message_id}/{filename}   ← message attachments
   backups/d1/{date}/backup-*.json.gz ← daily DB backups
+  backups/forum/{date}/forum-*.sql.gz ← daily forum DB backups
   backups/d1/latest.json.gz
 ```
 
@@ -271,7 +272,7 @@ OAuth2 server (for Flarum SSO)
 | Platform | Flarum (PHP + MySQL), open source |
 | Hosting | Same VPS, isolated Nginx vhost |
 | Database | **Dedicated MySQL** — not shared with anything else |
-| URL | `forum.[BRAND].com` |
+| URL | `forum.rogersense.com` |
 | Theme | **Custom CSS matching the main site** — same Deep Navy + Electric Teal system (NOT a separate palette) |
 
 ### SSO
@@ -288,12 +289,12 @@ Announcements · General · Hardware · Firmware & Software · Mechanical · Dev
 
 | Concern | Approach |
 |---------|----------|
-| Project dir | `/var/www/[BRAND]` |
+| Project dir | `/var/www/rogersense` |
 | Process | PM2 (`ecosystem.config.js`): main app + nightly backup cron |
-| Reverse proxy | Nginx — `[BRAND].com` → Node :PORT; `forum.[BRAND].com` → Flarum |
+| Reverse proxy | Nginx — `rogersense.com` → Node :3002; `forum.rogersense.com` → Flarum |
 | TLS | Let's Encrypt / Certbot (auto-renew) |
-| Update | `git pull --no-rebase origin main && pm2 restart [BRAND]` (`npm install` if deps changed) |
-| Env | `/var/www/[BRAND]/.env` — never committed; holds JWT secrets, CF tokens, R2 keys, OAuth secrets |
+| Update | Sync repo files to `/var/www/rogersense`, excluding `.env`, `node_modules`, `logs`; then `pm2 restart rogersense --update-env` |
+| Env | `/var/www/rogersense/.env` — never committed; holds JWT secrets, CF tokens, R2 keys, OAuth secrets |
 
 ### Backup & Restore
 

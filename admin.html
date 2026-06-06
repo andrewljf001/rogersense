@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin — Rogersense</title>
   <link rel="stylesheet" href="assets/style.css"/>
+  <link rel="icon" href="/favicon.svg?v=20260606" type="image/svg+xml"/>
 </head>
 <body>
 <nav class="nav">
@@ -14,9 +15,14 @@
       <span class="nav-logo-sub">Admin</span>
     </a>
     <ul class="nav-links">
+      <li><a href="#" data-view="dashboard">Dashboard</a></li>
       <li><a href="#" data-view="quotes" class="active">Briefs</a></li>
-      <li><a href="#" data-view="customers">Customers</a></li>
+      <li><a href="#" data-view="products">Store</a></li>
+      <li><a href="#" data-view="orders">Orders</a></li>
+      <li><a href="#" data-view="reviews">Reviews</a></li>
       <li><a href="#" data-view="cases">Cases</a></li>
+      <li><a href="#" data-view="blog">Blog</a></li>
+      <li><a href="#" data-view="customers">Customers</a></li>
       <li><a href="#" data-view="settings">Settings</a></li>
     </ul>
     <div class="nav-actions" id="nav-actions"></div>
@@ -204,6 +210,160 @@
       </div>
     </div>
 
+    <!-- ── Dashboard ── -->
+    <div id="view-dashboard" style="display:none;">
+      <h2 style="font-size:1.3rem;margin-bottom:24px;">Dashboard</h2>
+      <div id="stat-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;margin-bottom:32px;">
+        <div style="padding:30px;text-align:center;color:var(--color-text-light);grid-column:1/-1;">Loading…</div>
+      </div>
+      <div style="border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:24px;max-width:760px;">
+        <h3 style="font-family:var(--font-sans);font-size:1rem;font-weight:600;margin-bottom:4px;">GDPR — pending deletion requests</h3>
+        <p style="font-size:0.8rem;color:var(--color-text-muted);margin-bottom:16px;">Users who requested data deletion. Executing removes the user and anonymizes their briefs.</p>
+        <div id="gdpr-list"><p style="font-size:0.85rem;color:var(--color-text-light);">Loading…</p></div>
+      </div>
+    </div>
+
+    <!-- ── Products / Store ── -->
+    <div id="view-products" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+        <h2 style="font-size:1.3rem;">Store — Products</h2>
+        <button class="btn btn-primary" id="new-product-btn">+ New product</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="products-tbody"><tr><td colspan="6" style="text-align:center;color:var(--color-text-light);padding:40px;">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- Product editor -->
+      <div id="product-editor" style="display:none;margin-top:28px;border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:28px;max-width:780px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <h3 style="font-family:var(--font-sans);font-size:1rem;font-weight:600;" id="product-editor-title">New product</h3>
+          <button class="btn btn-ghost" id="close-product-editor">✕ Close</button>
+        </div>
+        <input type="hidden" id="p-id"/>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-field"><label>Name</label><input class="form-input" id="p-name"/></div>
+          <div class="form-field"><label>Slug <span style="color:var(--color-text-light);font-weight:400;">(url id)</span></label><input class="form-input" id="p-slug" placeholder="esp32-devkit"/></div>
+          <div class="form-field"><label>Category</label><select class="form-input" id="p-category"><option value="board">Dev Board</option><option value="tool">Tool</option><option value="accessory">Accessory</option></select></div>
+          <div class="form-field"><label>Status</label><select class="form-input" id="p-status"><option value="active">Active (visible)</option><option value="hidden">Hidden</option></select></div>
+          <div class="form-field"><label>Price (USD)</label><input class="form-input" id="p-price" type="number" step="0.01"/></div>
+          <div class="form-field"><label>Stock <span style="color:var(--color-text-light);font-weight:400;">(0 = sold out)</span></label><input class="form-input" id="p-stock" type="number"/></div>
+        </div>
+        <div class="form-field" style="margin-top:4px;"><label>Summary <span style="color:var(--color-text-light);font-weight:400;">(card text)</span></label><input class="form-input" id="p-summary"/></div>
+        <div class="form-field"><label>Description</label><textarea class="form-textarea" id="p-description" rows="4"></textarea></div>
+
+        <!-- Images -->
+        <div class="form-field">
+          <label>Images <span style="color:var(--color-text-light);font-weight:400;">(first = cover)</span></label>
+          <input type="file" id="p-image-file" accept="image/*" multiple/>
+          <div id="p-images-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"></div>
+        </div>
+
+        <!-- Downloads -->
+        <div class="form-field">
+          <label>Downloads / resources <span style="color:var(--color-text-light);font-weight:400;">(datasheet, firmware, SDK…)</span></label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <input class="form-input" id="p-dl-label" placeholder="Label (e.g. Schematic PDF)" style="flex:1;min-width:180px;"/>
+            <input type="file" id="p-dl-file"/>
+            <button class="btn btn-outline btn-sm" id="p-dl-add" type="button">Upload &amp; add</button>
+          </div>
+          <ul id="p-downloads-list" style="list-style:none;padding:0;margin:12px 0 0;display:flex;flex-direction:column;gap:6px;"></ul>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button class="btn btn-primary" id="save-product-btn">Save product</button>
+          <button class="btn btn-outline" id="cancel-product-btn">Cancel</button>
+        </div>
+        <p id="product-form-error" style="color:var(--color-accent);font-size:0.825rem;display:none;margin-top:8px;"></p>
+      </div>
+    </div>
+
+    <!-- ── Store Orders ── -->
+    <div id="view-orders" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+        <h2 style="font-size:1.3rem;">Store Orders</h2>
+        <select class="form-input" id="orders-filter" style="width:auto;padding:8px 12px;">
+          <option value="">All</option>
+          <option value="paid" selected>Paid</option>
+          <option value="shipped">Shipped</option>
+          <option value="completed">Completed</option>
+          <option value="pending">Pending</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Order</th><th>Product</th><th>Buyer</th><th>Ship to</th><th>Total</th><th>Status</th><th>Tracking</th><th></th></tr></thead>
+          <tbody id="orders-tbody"><tr><td colspan="8" style="text-align:center;color:var(--color-text-light);padding:40px;">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Reviews moderation ── -->
+    <div id="view-reviews" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+        <h2 style="font-size:1.3rem;">Reviews <span id="rv-pending-badge" style="display:none;font-size:0.8rem;background:#f59e0b;color:#111;padding:2px 9px;border-radius:10px;margin-left:6px;"></span></h2>
+        <select class="form-input" id="rv-filter" style="width:auto;padding:8px 12px;">
+          <option value="">All</option>
+          <option value="pending" selected>Pending</option>
+          <option value="approved">Approved</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Product</th><th>Rating</th><th>Author</th><th>Review</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="reviews-tbody"><tr><td colspan="6" style="text-align:center;color:var(--color-text-light);padding:40px;">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Blog / Posts ── -->
+    <div id="view-blog" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+        <h2 style="font-size:1.3rem;">Blog — Posts</h2>
+        <button class="btn btn-primary" id="new-post-btn">+ New post</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Title</th><th>Status</th><th>Author</th><th>Views</th><th>Published</th><th>Action</th></tr></thead>
+          <tbody id="posts-tbody"><tr><td colspan="6" style="text-align:center;color:var(--color-text-light);padding:40px;">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div id="post-editor" style="display:none;margin-top:28px;border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:28px;max-width:820px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <h3 style="font-family:var(--font-sans);font-size:1rem;font-weight:600;" id="post-editor-title">New post</h3>
+          <button class="btn btn-ghost" id="close-post-editor">✕ Close</button>
+        </div>
+        <input type="hidden" id="b-id"/>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
+          <div class="form-field"><label>Title</label><input class="form-input" id="b-title"/></div>
+          <div class="form-field"><label>Slug</label><input class="form-input" id="b-slug" placeholder="my-post"/></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+          <div class="form-field"><label>Status</label><select class="form-input" id="b-status"><option value="draft">Draft</option><option value="published">Published</option></select></div>
+          <div class="form-field"><label>Author</label><input class="form-input" id="b-author" placeholder="Rogersense Team"/></div>
+          <div class="form-field"><label>Tags <span style="color:var(--color-text-light);font-weight:400;">(comma-sep)</span></label><input class="form-input" id="b-tags" placeholder="firmware, ble"/></div>
+        </div>
+        <div class="form-field"><label>Cover image</label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <input class="form-input" id="b-cover" placeholder="/img?key=… or upload →" style="flex:1;min-width:200px;"/>
+            <input type="file" id="b-cover-file" accept="image/*"/>
+          </div>
+          <div id="b-cover-preview" style="margin-top:8px;"></div>
+        </div>
+        <div class="form-field"><label>Excerpt <span style="color:var(--color-text-light);font-weight:400;">(card + SEO summary)</span></label><textarea class="form-textarea" id="b-excerpt" rows="2"></textarea></div>
+        <div class="form-field"><label>Content <span style="color:var(--color-text-light);font-weight:400;">(HTML)</span></label><textarea class="form-textarea" id="b-content" rows="12" style="font-family:monospace;font-size:0.85rem;"></textarea></div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-primary" id="save-post-btn">Save post</button>
+          <button class="btn btn-outline" id="cancel-post-btn">Cancel</button>
+        </div>
+        <p id="post-form-error" style="color:var(--color-accent);font-size:0.825rem;display:none;margin-top:8px;"></p>
+      </div>
+    </div>
+
     <!-- ── Settings ── -->
     <div id="view-settings" style="display:none;">
       <h2 style="font-size:1.3rem;margin-bottom:24px;">Settings</h2>
@@ -219,6 +379,41 @@
             <div style="display:flex;gap:8px;"><input class="form-input" id="set-contact_email" placeholder="admin@rogersense.com"/><button class="btn btn-outline btn-sm" onclick="saveSetting('contact_email','set-contact_email')">Save</button></div></div>
           <div class="form-field"><label>Forum URL</label>
             <div style="display:flex;gap:8px;"><input class="form-input" id="set-forum_url" placeholder="https://forum.rogersense.com"/><button class="btn btn-outline btn-sm" onclick="saveSetting('forum_url','set-forum_url')">Save</button></div></div>
+          <div class="form-field"><label>Contact address <span style="color:var(--color-text-light);font-weight:400;">(shown on site)</span></label>
+            <div style="display:flex;gap:8px;"><input class="form-input" id="set-contact_address"/><button class="btn btn-outline btn-sm" onclick="saveSetting('contact_address','set-contact_address')">Save</button></div></div>
+          <div class="form-field"><label>Business hours</label>
+            <div style="display:flex;gap:8px;"><input class="form-input" id="set-contact_hours" placeholder="Mon–Sat, 9am–6pm"/><button class="btn btn-outline btn-sm" onclick="saveSetting('contact_hours','set-contact_hours')">Save</button></div></div>
+          <div class="form-field"><label>WhatsApp number <span style="color:var(--color-text-light);font-weight:400;">(digits only, with country code, no +)</span></label>
+            <div style="display:flex;gap:8px;"><input class="form-input" id="set-whatsapp_number" placeholder="8613800138000"/><button class="btn btn-outline btn-sm" onclick="saveSetting('whatsapp_number','set-whatsapp_number')">Save</button></div>
+            <p style="font-size:0.72rem;color:var(--color-text-light);margin-top:4px;">Sets the floating WhatsApp button across the site. Leave blank to hide it.</p></div>
+          <div class="form-field"><label>Engineer direct WhatsApp <span style="color:var(--color-text-light);font-weight:400;">(optional, digits only)</span></label>
+            <div style="display:flex;gap:8px;"><input class="form-input" id="set-engineer_whatsapp" placeholder="8613800138000"/><button class="btn btn-outline btn-sm" onclick="saveSetting('engineer_whatsapp','set-engineer_whatsapp')">Save</button></div></div>
+        </div>
+      </div>
+
+      <!-- Payments (PayPal) -->
+      <div style="border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:28px;margin-bottom:24px;max-width:760px;">
+        <h3 style="font-family:var(--font-sans);font-size:1rem;font-weight:600;margin-bottom:4px;">Payments — PayPal</h3>
+        <p style="font-size:0.8rem;color:var(--color-text-muted);margin-bottom:20px;">Powers direct Store checkout and brief payment links. The client secret is <b>AES-256-GCM encrypted</b> before storage.</p>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="form-field"><label>Mode</label>
+            <div style="display:flex;gap:8px;"><select class="form-input" id="set-paypal_mode"><option value="live">Live</option><option value="sandbox">Sandbox (testing)</option></select><button class="btn btn-outline btn-sm" onclick="saveSetting('paypal_mode','set-paypal_mode')">Save</button></div></div>
+          <div class="form-field"><label>Client ID</label>
+            <div style="display:flex;gap:8px;"><input class="form-input" id="set-paypal_client_id"/><button class="btn btn-outline btn-sm" onclick="saveSetting('paypal_client_id','set-paypal_client_id')">Save</button></div></div>
+          <div class="form-field"><label>Client secret <span style="color:var(--color-text-light);font-weight:400;">(encrypted)</span></label>
+            <div style="display:flex;gap:8px;"><input class="form-input" type="password" id="enc-paypal_secret" placeholder="Enter secret to update"/><button class="btn btn-primary btn-sm" onclick="saveEncrypted('paypal_client_secret_enc','enc-paypal_secret')">Encrypt &amp; Save</button></div></div>
+        </div>
+      </div>
+
+      <!-- Human verification (Cloudflare Turnstile) -->
+      <div style="border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:28px;margin-bottom:24px;max-width:760px;">
+        <h3 style="font-family:var(--font-sans);font-size:1rem;font-weight:600;margin-bottom:4px;">Human verification — Cloudflare Turnstile</h3>
+        <p style="font-size:0.8rem;color:var(--color-text-muted);margin-bottom:20px;">Protects the contact, review and sign-up forms from bots. Leave blank to disable. Create keys at Cloudflare → Turnstile. The secret is <b>encrypted</b> before storage.</p>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="form-field"><label>Site key <span style="color:var(--color-text-light);font-weight:400;">(public)</span></label>
+            <div style="display:flex;gap:8px;"><input class="form-input" id="set-turnstile_site_key" placeholder="0x4AAAA…"/><button class="btn btn-outline btn-sm" onclick="saveSetting('turnstile_site_key','set-turnstile_site_key')">Save</button></div></div>
+          <div class="form-field"><label>Secret key <span style="color:var(--color-text-light);font-weight:400;">(encrypted)</span></label>
+            <div style="display:flex;gap:8px;"><input class="form-input" type="password" id="enc-turnstile_secret" placeholder="Enter secret to update"/><button class="btn btn-primary btn-sm" onclick="saveEncrypted('turnstile_secret_enc','enc-turnstile_secret')">Encrypt &amp; Save</button></div></div>
         </div>
       </div>
 
@@ -271,7 +466,7 @@
   </div>
 </main>
 
-<script src="assets/main.js"></script>
+<script src="assets/main.js?v=4"></script>
 <script>
   requireAdmin();
 
@@ -279,7 +474,7 @@
   const pendingPhotos = [];
 
   // Nav tabs
-  const VIEWS = ['quotes', 'customers', 'cases', 'settings'];
+  const VIEWS = ['dashboard', 'quotes', 'products', 'orders', 'reviews', 'cases', 'blog', 'customers', 'settings'];
   document.querySelectorAll('.nav-links [data-view]').forEach(link => {
     link.addEventListener('click', e => {
       e.preventDefault();
@@ -290,6 +485,11 @@
       });
       document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
       link.classList.add('active');
+      if (v === 'dashboard') loadStats();
+      if (v === 'products')  loadProducts();
+      if (v === 'orders')    loadOrders();
+      if (v === 'reviews')   loadReviews();
+      if (v === 'blog')      loadPosts();
       if (v === 'cases')     loadAdminCases();
       if (v === 'customers') loadCustomers();
       if (v === 'settings')  loadSettings();
@@ -344,6 +544,19 @@
           <p style="font-size:0.875rem;">${q.description}</p>
         </div>
         ${q.files?.length?`<div style="margin-top:12px;"><p style="font-size:0.75rem;font-weight:600;color:var(--color-text-muted);margin-bottom:6px;">FILES</p><div class="file-list">${q.files.map(f=>`<div class="file-item"><span class="file-item-name">📄 ${f.name}</span><span class="file-item-size">${formatSize(f.size)}</span></div>`).join('')}</div></div>`:''}
+        <div style="margin-top:16px;padding:16px;border:1px solid var(--color-border);border-radius:var(--radius-md);">
+          <p style="font-size:0.75rem;font-weight:600;color:var(--color-text-muted);margin-bottom:10px;">QUOTE &amp; PAYMENT</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div class="form-field" style="margin:0;"><label>Quoted price (USD)</label><input class="form-input" id="q-price" type="number" step="0.01" value="${q.quoted_price ?? ''}"/></div>
+            <div class="form-field" style="margin:0;"><label>Shipping (USD)</label><input class="form-input" id="q-shipping" type="number" step="0.01" value="${q.shipping_fee ?? ''}"/></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-outline btn-sm" id="save-price-btn">Save price</button>
+            <button class="btn btn-primary btn-sm" id="send-payment-btn">Send payment link →</button>
+            ${q.total_paid?`<span style="font-size:0.8rem;color:var(--color-text-success);">Paid: $${Number(q.total_paid).toFixed(2)}</span>`:''}
+          </div>
+          <p style="font-size:0.72rem;color:var(--color-text-light);margin-top:8px;">Emails the client a PayPal link for (price + shipping). Requires PayPal configured in Settings.</p>
+        </div>
       `;
 
       // Status buttons
@@ -359,6 +572,29 @@
           openAdminQuote(id);
         })
       );
+
+      // Pricing + payment
+      document.getElementById('save-price-btn').addEventListener('click', async () => {
+        try {
+          await apiFetch('/quotes/' + id, { method:'PATCH', body: JSON.stringify({
+            quoted_price: document.getElementById('q-price').value,
+            shipping_fee: document.getElementById('q-shipping').value,
+          })});
+          showToast('Price saved');
+        } catch(e) { showToast('Error: ' + e.message, 'error'); }
+      });
+      document.getElementById('send-payment-btn').addEventListener('click', async () => {
+        const price = document.getElementById('q-price').value;
+        if (!price) { showToast('Set a quoted price first', 'error'); return; }
+        try {
+          await apiFetch('/quotes/' + id, { method:'PATCH', body: JSON.stringify({
+            quoted_price: price, shipping_fee: document.getElementById('q-shipping').value,
+          })});
+          const r = await apiFetch('/quotes/' + id + '/send-payment', { method:'POST' });
+          showToast(r.message || 'Payment link sent');
+          loadAdminQuotes(); openAdminQuote(id);
+        } catch(e) { showToast('Error: ' + e.message, 'error'); }
+      });
 
       // Messages
       const msgs = md?.messages || [];
@@ -595,7 +831,9 @@
       const data = await apiFetch('/api/admin/settings');
       const map = {};
       (data?.settings || []).forEach(s => { map[s.key] = s.value || ''; });
-      ['company_name','contact_email','forum_url','mail_driver','mail_from','mail_from_name','smtp_host','smtp_port','smtp_secure','smtp_user']
+      ['company_name','contact_email','forum_url','contact_address','contact_hours','whatsapp_number','engineer_whatsapp',
+       'paypal_mode','paypal_client_id','turnstile_site_key',
+       'mail_driver','mail_from','mail_from_name','smtp_host','smtp_port','smtp_secure','smtp_user']
         .forEach(k => { const el = document.getElementById('set-' + k); if (el) el.value = map[k] || ''; });
       toggleMailFields();
     } catch(e) { showToast('Failed to load settings', 'error'); }
@@ -641,6 +879,319 @@
       resEl.textContent = '✗ ' + e.message; resEl.style.color = 'var(--color-accent)';
     }
   }
+
+  // ── DASHBOARD ──
+  async function loadStats() {
+    try {
+      const s = await apiFetch('/api/admin/stats');
+      const cards = [
+        ['Total briefs', s.quotes?.total ?? 0],
+        ['Pending briefs', s.quotes?.pending ?? 0],
+        ['New today', s.quotes?.today ?? 0],
+        ['Store orders', s.orders?.total ?? 0],
+        ['Awaiting ship', s.orders?.paid ?? 0],
+        ['Customers', s.users?.total ?? 0],
+        ['Published cases', s.cases?.total ?? 0],
+        ['Revenue (USD)', '$' + Number(s.revenue?.total_revenue || 0).toFixed(2)],
+      ];
+      document.getElementById('stat-cards').innerHTML = cards.map(([label, val]) =>
+        `<div style="border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:20px;">
+           <div style="font-size:1.6rem;font-weight:700;">${val}</div>
+           <div style="font-size:0.78rem;color:var(--color-text-muted);margin-top:4px;">${label}</div>
+         </div>`).join('');
+    } catch(e) { document.getElementById('stat-cards').innerHTML = '<p style="color:var(--color-accent);grid-column:1/-1;">Failed to load stats.</p>'; }
+    loadGdpr();
+  }
+  async function loadGdpr() {
+    try {
+      const d = await apiFetch('/api/admin/gdpr/pending');
+      const list = d.pending || [];
+      document.getElementById('gdpr-list').innerHTML = list.length
+        ? list.map(u => `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--color-border);">
+            <div><div style="font-weight:500;font-size:0.875rem;">${u.email}</div>
+            <div style="font-size:0.75rem;color:var(--color-text-light);">${u.deletion_reason||'—'} · ${formatDate(u.deletion_requested_at)}</div></div>
+            <button class="btn btn-outline btn-sm" onclick="gdprDelete('${u.email}')">Delete &amp; anonymize</button></div>`).join('')
+        : '<p style="font-size:0.85rem;color:var(--color-text-light);">No pending requests.</p>';
+    } catch(e) { document.getElementById('gdpr-list').innerHTML = '<p style="color:var(--color-accent);font-size:0.85rem;">Failed to load.</p>'; }
+  }
+  async function gdprDelete(email) {
+    if (!confirm(`Permanently delete ${email}? Their briefs will be anonymized. This cannot be undone.`)) return;
+    try {
+      await apiFetch('/api/admin/gdpr/delete-user', { method:'DELETE', body: JSON.stringify({ email }) });
+      showToast('Deleted ' + email); loadGdpr();
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+  }
+  window.gdprDelete = gdprDelete;
+
+  // ── PRODUCTS / STORE ──
+  let editingImages = [];
+  let editingDownloads = [];
+
+  async function loadProducts() {
+    try {
+      const d = await apiFetch('/api/admin/products');
+      const ps = d.products || [];
+      document.getElementById('products-tbody').innerHTML = ps.length
+        ? ps.map(p => `<tr>
+            <td style="font-weight:500;font-size:0.875rem;">${p.name}</td>
+            <td style="font-size:0.8rem;">${p.category||'—'}</td>
+            <td style="font-size:0.85rem;">$${Number(p.price).toFixed(2)}</td>
+            <td style="font-size:0.85rem;">${p.stock}</td>
+            <td><span class="status-badge status-${p.status==='active'?'completed':'cancelled'}">${p.status}</span></td>
+            <td style="display:flex;gap:6px;"><button class="btn btn-outline btn-sm" data-edit='${encodeURIComponent(JSON.stringify(p))}'>Edit</button>
+            <button class="btn btn-ghost btn-sm" data-del="${p.id}">Delete</button></td>
+          </tr>`).join('')
+        : '<tr><td colspan="6" style="text-align:center;color:var(--color-text-light);padding:40px;">No products yet. Click “New product”.</td></tr>';
+      document.querySelectorAll('#products-tbody [data-edit]').forEach(b => b.addEventListener('click', () => openProductEditor(JSON.parse(decodeURIComponent(b.dataset.edit)))));
+      document.querySelectorAll('#products-tbody [data-del]').forEach(b => b.addEventListener('click', () => deleteProduct(b.dataset.del)));
+    } catch(e) { document.getElementById('products-tbody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--color-accent);padding:20px;">Failed to load.</td></tr>'; }
+  }
+
+  function renderEditorImages() {
+    document.getElementById('p-images-preview').innerHTML = editingImages.map((u,i) =>
+      `<div style="position:relative;"><img src="${u}" style="width:70px;height:70px;object-fit:cover;border-radius:6px;border:1px solid var(--color-border);"/>
+       <button type="button" onclick="rmImg(${i})" style="position:absolute;top:-6px;right:-6px;background:#c0392b;color:#fff;border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:11px;line-height:1;">✕</button></div>`).join('');
+  }
+  function renderEditorDownloads() {
+    document.getElementById('p-downloads-list').innerHTML = editingDownloads.map((d,i) =>
+      `<li style="display:flex;align-items:center;gap:8px;font-size:0.85rem;border:1px solid var(--color-border);border-radius:6px;padding:6px 10px;">
+       📄 ${d.label || d.url} <a href="${d.url}" target="_blank" style="margin-left:auto;font-size:0.78rem;">view</a>
+       <button type="button" onclick="rmDl(${i})" style="background:none;border:none;color:#c0392b;cursor:pointer;">✕</button></li>`).join('');
+  }
+  window.rmImg = i => { editingImages.splice(i,1); renderEditorImages(); };
+  window.rmDl  = i => { editingDownloads.splice(i,1); renderEditorDownloads(); };
+
+  function openProductEditor(p) {
+    editingImages = p ? (p.images || []) : [];
+    editingDownloads = p ? (p.downloads || []) : [];
+    document.getElementById('product-editor-title').textContent = p ? 'Edit product' : 'New product';
+    document.getElementById('p-id').value = p?.id || '';
+    document.getElementById('p-name').value = p?.name || '';
+    document.getElementById('p-slug').value = p?.slug || '';
+    document.getElementById('p-category').value = p?.category || 'board';
+    document.getElementById('p-status').value = p?.status || 'active';
+    document.getElementById('p-price').value = p?.price ?? '';
+    document.getElementById('p-stock').value = p?.stock ?? '';
+    document.getElementById('p-summary').value = p?.summary || '';
+    document.getElementById('p-description').value = p?.description || '';
+    document.getElementById('product-form-error').style.display = 'none';
+    renderEditorImages(); renderEditorDownloads();
+    document.getElementById('product-editor').style.display = 'block';
+    document.getElementById('product-editor').scrollIntoView({ behavior:'smooth' });
+  }
+  function closeProductEditor() { document.getElementById('product-editor').style.display = 'none'; }
+
+  document.getElementById('new-product-btn').addEventListener('click', () => openProductEditor(null));
+  document.getElementById('close-product-editor').addEventListener('click', closeProductEditor);
+  document.getElementById('cancel-product-btn').addEventListener('click', closeProductEditor);
+
+  document.getElementById('p-image-file').addEventListener('change', async e => {
+    for (const file of e.target.files) {
+      try { const r = await UploadAPI.upload(file, 'products'); editingImages.push(r.url); }
+      catch(err) { showToast('Upload failed: ' + err.message, 'error'); }
+    }
+    e.target.value = ''; renderEditorImages();
+  });
+  document.getElementById('p-dl-add').addEventListener('click', async () => {
+    const fileEl = document.getElementById('p-dl-file');
+    const label = document.getElementById('p-dl-label').value.trim();
+    if (!fileEl.files[0]) { showToast('Choose a file first', 'error'); return; }
+    try {
+      const r = await UploadAPI.upload(fileEl.files[0], 'products');
+      editingDownloads.push({ label: label || r.name, url: r.url });
+      document.getElementById('p-dl-label').value = ''; fileEl.value = '';
+      renderEditorDownloads();
+    } catch(err) { showToast('Upload failed: ' + err.message, 'error'); }
+  });
+
+  document.getElementById('save-product-btn').addEventListener('click', async () => {
+    const errEl = document.getElementById('product-form-error');
+    const id = document.getElementById('p-id').value;
+    const payload = {
+      name: document.getElementById('p-name').value.trim(),
+      slug: document.getElementById('p-slug').value.trim() || slugify(document.getElementById('p-name').value.trim()),
+      category: document.getElementById('p-category').value,
+      status: document.getElementById('p-status').value,
+      price: parseFloat(document.getElementById('p-price').value) || 0,
+      stock: parseInt(document.getElementById('p-stock').value) || 0,
+      summary: document.getElementById('p-summary').value.trim(),
+      description: document.getElementById('p-description').value.trim(),
+      cover_image: editingImages[0] || '',
+      images: editingImages,
+      downloads: editingDownloads,
+    };
+    if (!payload.name || !payload.slug) { errEl.textContent = 'Name and slug are required.'; errEl.style.display='block'; return; }
+    try {
+      if (id) await apiFetch('/api/admin/products/' + id, { method:'PUT', body: JSON.stringify(payload) });
+      else    await apiFetch('/api/admin/products', { method:'POST', body: JSON.stringify(payload) });
+      showToast('Product saved'); closeProductEditor(); loadProducts();
+    } catch(e) { errEl.textContent = e.message; errEl.style.display='block'; }
+  });
+  async function deleteProduct(id) {
+    if (!confirm('Delete this product? This cannot be undone.')) return;
+    try { await apiFetch('/api/admin/products/' + id, { method:'DELETE' }); showToast('Deleted'); loadProducts(); }
+    catch(e) { showToast('Error: ' + e.message, 'error'); }
+  }
+
+  // ── BLOG / POSTS ──
+  async function loadPosts() {
+    try {
+      const d = await apiFetch('/api/admin/posts');
+      const ps = d.posts || [];
+      document.getElementById('posts-tbody').innerHTML = ps.length
+        ? ps.map(p => `<tr>
+            <td style="font-weight:500;font-size:0.875rem;">${p.title}</td>
+            <td><span class="status-badge status-${p.status==='published'?'completed':'pending'}">${p.status}</span></td>
+            <td style="font-size:0.8rem;">${p.author||'—'}</td>
+            <td style="font-size:0.85rem;">${p.views||0}</td>
+            <td style="font-size:0.8rem;color:var(--color-text-muted);">${p.published_at?formatDate(p.published_at):'—'}</td>
+            <td style="display:flex;gap:6px;"><button class="btn btn-outline btn-sm" data-edit="${p.id}">Edit</button>
+            <button class="btn btn-ghost btn-sm" data-del="${p.id}">Delete</button></td>
+          </tr>`).join('')
+        : '<tr><td colspan="6" style="text-align:center;color:var(--color-text-light);padding:40px;">No posts yet. Click “New post”.</td></tr>';
+      document.querySelectorAll('#posts-tbody [data-edit]').forEach(b => b.addEventListener('click', () => editPost(b.dataset.edit)));
+      document.querySelectorAll('#posts-tbody [data-del]').forEach(b => b.addEventListener('click', () => deletePost(b.dataset.del)));
+    } catch(e) { document.getElementById('posts-tbody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--color-accent);padding:20px;">Failed to load.</td></tr>'; }
+  }
+  function renderCover() {
+    const u = document.getElementById('b-cover').value;
+    document.getElementById('b-cover-preview').innerHTML = u ? `<img src="${u}" style="max-width:200px;border-radius:8px;border:1px solid var(--color-border);"/>` : '';
+  }
+  function openPostEditor(p) {
+    document.getElementById('post-editor-title').textContent = p ? 'Edit post' : 'New post';
+    document.getElementById('b-id').value = p?.id || '';
+    document.getElementById('b-title').value = p?.title || '';
+    document.getElementById('b-slug').value = p?.slug || '';
+    document.getElementById('b-status').value = p?.status || 'draft';
+    document.getElementById('b-author').value = p?.author || 'Rogersense Team';
+    document.getElementById('b-tags').value = (p?.tags || []).join(', ');
+    document.getElementById('b-cover').value = p?.cover_url || '';
+    document.getElementById('b-excerpt').value = p?.excerpt || '';
+    document.getElementById('b-content').value = p?.content || '';
+    document.getElementById('post-form-error').style.display = 'none';
+    renderCover();
+    document.getElementById('post-editor').style.display = 'block';
+    document.getElementById('post-editor').scrollIntoView({ behavior:'smooth' });
+  }
+  async function editPost(id) {
+    try { const d = await apiFetch('/api/admin/posts/' + id); openPostEditor(d.post); }
+    catch(e) { showToast('Error: ' + e.message, 'error'); }
+  }
+  function closePostEditor() { document.getElementById('post-editor').style.display = 'none'; }
+  document.getElementById('new-post-btn').addEventListener('click', () => openPostEditor(null));
+  document.getElementById('close-post-editor').addEventListener('click', closePostEditor);
+  document.getElementById('cancel-post-btn').addEventListener('click', closePostEditor);
+  document.getElementById('b-cover').addEventListener('input', renderCover);
+  document.getElementById('b-cover-file').addEventListener('change', async e => {
+    if (!e.target.files[0]) return;
+    try { const r = await UploadAPI.upload(e.target.files[0], 'products'); document.getElementById('b-cover').value = r.url; renderCover(); }
+    catch(err) { showToast('Upload failed: ' + err.message, 'error'); }
+    e.target.value = '';
+  });
+  document.getElementById('save-post-btn').addEventListener('click', async () => {
+    const errEl = document.getElementById('post-form-error');
+    const id = document.getElementById('b-id').value;
+    const payload = {
+      title: document.getElementById('b-title').value.trim(),
+      slug: document.getElementById('b-slug').value.trim() || slugify(document.getElementById('b-title').value.trim()),
+      status: document.getElementById('b-status').value,
+      author: document.getElementById('b-author').value.trim() || 'Rogersense Team',
+      tags: document.getElementById('b-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+      cover_url: document.getElementById('b-cover').value.trim(),
+      excerpt: document.getElementById('b-excerpt').value.trim(),
+      content: document.getElementById('b-content').value,
+    };
+    if (!payload.title || !payload.slug) { errEl.textContent = 'Title and slug are required.'; errEl.style.display='block'; return; }
+    try {
+      if (id) await apiFetch('/api/admin/posts/' + id, { method:'PUT', body: JSON.stringify(payload) });
+      else    await apiFetch('/api/admin/posts', { method:'POST', body: JSON.stringify(payload) });
+      showToast('Post saved'); closePostEditor(); loadPosts();
+    } catch(e) { errEl.textContent = e.message; errEl.style.display='block'; }
+  });
+  async function deletePost(id) {
+    if (!confirm('Delete this post? This cannot be undone.')) return;
+    try { await apiFetch('/api/admin/posts/' + id, { method:'DELETE' }); showToast('Deleted'); loadPosts(); }
+    catch(e) { showToast('Error: ' + e.message, 'error'); }
+  }
+
+  // ── STORE ORDERS ──
+  async function loadOrders() {
+    const status = document.getElementById('orders-filter').value;
+    try {
+      const d = await apiFetch('/api/admin/product-orders');
+      let os = d.orders || [];
+      if (status) os = os.filter(o => o.status === status);
+      const STAT = ['pending','paid','shipped','completed','cancelled'];
+      document.getElementById('orders-tbody').innerHTML = os.length
+        ? os.map(o => `<tr data-row="${o.id}">
+            <td style="font-size:0.78rem;font-family:monospace;">${o.order_no}<div style="color:var(--color-text-light);">${formatDate(o.created_at)}</div></td>
+            <td style="font-size:0.82rem;">${(o.product_name||'').slice(0,24)} ×${o.qty}</td>
+            <td style="font-size:0.8rem;">${o.buyer_email||'—'}</td>
+            <td style="font-size:0.76rem;color:var(--color-text-muted);">${[o.ship_recipient,o.ship_address,o.ship_city,o.ship_country].filter(Boolean).join(', ')||'—'}${o.ship_phone?'<br>📞 '+o.ship_phone:''}</td>
+            <td style="font-size:0.85rem;">$${Number(o.total_paid||0).toFixed(2)}</td>
+            <td><select class="form-input o-status" style="padding:5px 8px;font-size:0.8rem;width:auto;">
+              ${STAT.map(s=>`<option value="${s}" ${s===o.status?'selected':''}>${s}</option>`).join('')}
+            </select></td>
+            <td><input class="form-input o-track" placeholder="tracking no." value="${o.tracking_no||''}" style="padding:5px 8px;font-size:0.78rem;width:110px;"/>
+                <input class="form-input o-carrier" placeholder="carrier" value="${o.carrier||''}" style="padding:5px 8px;font-size:0.78rem;width:90px;margin-top:4px;"/></td>
+            <td><button class="btn btn-primary btn-sm o-save">Save</button></td>
+          </tr>`).join('')
+        : '<tr><td colspan="8" style="text-align:center;color:var(--color-text-light);padding:40px;">No orders.</td></tr>';
+      document.querySelectorAll('#orders-tbody [data-row]').forEach(row => {
+        row.querySelector('.o-save').addEventListener('click', async () => {
+          try {
+            await apiFetch('/api/admin/product-orders/' + row.dataset.row, { method:'PUT', body: JSON.stringify({
+              status: row.querySelector('.o-status').value,
+              tracking_no: row.querySelector('.o-track').value.trim(),
+              carrier: row.querySelector('.o-carrier').value.trim(),
+            })});
+            showToast('Order saved — buyer notified if shipped/tracked');
+          } catch(e) { showToast('Error: ' + e.message, 'error'); }
+        });
+      });
+    } catch(e) { document.getElementById('orders-tbody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--color-accent);padding:20px;">Failed to load.</td></tr>'; }
+  }
+  document.getElementById('orders-filter').addEventListener('change', loadOrders);
+
+  // ── REVIEWS moderation ──
+  function rvStars(n) { return '<span style="color:#f59e0b;letter-spacing:1px;">' + '★'.repeat(n) + '<span style="color:var(--color-border);">' + '★'.repeat(5-n) + '</span></span>'; }
+  async function loadReviews() {
+    const status = document.getElementById('rv-filter').value;
+    try {
+      const [d, pend] = await Promise.all([
+        apiFetch('/api/admin/reviews' + (status ? '?status=' + status : '')),
+        apiFetch('/api/admin/reviews?status=pending'),
+      ]);
+      const badge = document.getElementById('rv-pending-badge');
+      if (pend.reviews.length) { badge.style.display = 'inline-block'; badge.textContent = pend.reviews.length + ' pending'; }
+      else badge.style.display = 'none';
+      const rs = d.reviews || [];
+      document.getElementById('reviews-tbody').innerHTML = rs.length
+        ? rs.map(r => `<tr ${r.status==='pending'?'style="background:rgba(245,158,11,0.06);"':''}>
+            <td style="font-size:0.85rem;">${r.product_name||'—'}</td>
+            <td>${rvStars(r.rating)}</td>
+            <td style="font-size:0.85rem;">${r.author_name}</td>
+            <td style="font-size:0.85rem;max-width:340px;">${(r.comment||'').replace(/</g,'&lt;')}</td>
+            <td><span class="status-badge status-${r.status==='approved'?'completed':'pending'}">${r.status}</span></td>
+            <td style="display:flex;gap:6px;">
+              ${r.status==='pending'?`<button class="btn btn-primary btn-sm" data-approve="${r.id}">Approve</button>`:''}
+              <button class="btn btn-ghost btn-sm" data-delrv="${r.id}">Delete</button>
+            </td></tr>`).join('')
+        : '<tr><td colspan="6" style="text-align:center;color:var(--color-text-light);padding:40px;">No reviews.</td></tr>';
+      document.querySelectorAll('#reviews-tbody [data-approve]').forEach(b => b.addEventListener('click', () => approveReview(b.dataset.approve)));
+      document.querySelectorAll('#reviews-tbody [data-delrv]').forEach(b => b.addEventListener('click', () => deleteReview(b.dataset.delrv)));
+    } catch(e) { document.getElementById('reviews-tbody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--color-accent);padding:20px;">Failed to load.</td></tr>'; }
+  }
+  async function approveReview(id) {
+    try { await apiFetch('/api/admin/reviews/' + id + '/approve', { method:'PUT' }); showToast('Approved'); loadReviews(); }
+    catch(e) { showToast('Error: ' + e.message, 'error'); }
+  }
+  async function deleteReview(id) {
+    if (!confirm('Delete this review?')) return;
+    try { await apiFetch('/api/admin/reviews/' + id, { method:'DELETE' }); showToast('Deleted'); loadReviews(); }
+    catch(e) { showToast('Error: ' + e.message, 'error'); }
+  }
+  document.getElementById('rv-filter').addEventListener('change', loadReviews);
 
   loadAdminQuotes();
 </script>

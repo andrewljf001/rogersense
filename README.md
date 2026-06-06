@@ -1,7 +1,7 @@
 # rogersense — Hardware Solution Website
 
 A professional English-language website for hardware + firmware + software + mechanical solution services.
-Customers describe their needs → we evaluate → custom quote. **No fixed pricing.**
+Customers can submit custom briefs for evaluation and buy in-stock tools/products directly from the store.
 
 ## Services
 - ⚙️ Hardware Design (PCB / PCBA)
@@ -12,14 +12,19 @@ Customers describe their needs → we evaluate → custom quote. **No fixed pric
 ## Site Structure
 | Page | Purpose |
 |------|---------|
-| `index.html` | Homepage — services overview + inline brief form |
-| `cases.html` / `case-detail.html` | Case showcase — photos + descriptions, no pricing |
-| `quote.html` | Submit a brief — 5-step request form (requires login) |
+| `index.html` | Homepage, services overview, cases preview, store/blog links |
+| `shop.html` / `product.html` | Fixed-price store, product detail, downloads, reviews, PayPal checkout |
+| `cases.html` / `case-detail.html` | Case showcase, photos and descriptions |
+| `blog.html` / `blog-post.html` | Blog list and SSR article pages |
+| `quote.html` | Submit a custom brief (requires login) |
 | `about.html` | About us |
-| `login.html` | Login / Register (email+password + GitHub OAuth) |
-| `dashboard.html` | Client dashboard — my briefs, status, messages |
-| `admin.html` | Admin panel — manage briefs & cases |
-| Forum | Flarum on VPS at `forum.[BRAND].com` (separate app, unified style) |
+| `contact.html` | Contact form plus sales/engineering WhatsApp lines |
+| `track.html` | Public order tracking |
+| `login.html` / `reset.html` | Email/password auth and password reset |
+| `dashboard.html` | Client dashboard, briefs, messages, product orders |
+| `admin.html` | Admin panel for briefs, cases, products, orders, reviews, posts, settings |
+| Legal pages | Privacy, terms, returns, shipping, GDPR deletion request |
+| Forum | Flarum on VPS at `forum.rogersense.com` (separate app, unified style) |
 
 ## Architecture (summary)
 **VPS runs stateless business logic; all data lives in Cloudflare.** See `ARCHITECTURE.md` for the full design.
@@ -34,9 +39,10 @@ Browser → Cloudflare CDN/SSL → VPS (Nginx) → Node.js + Express → Cloudfl
 | Backend | Node.js + Express (`server.js` + `database.js`) |
 | Database | Cloudflare D1 (SQLite) over HTTP REST API |
 | File storage | Cloudflare R2 (S3-compatible) |
-| Auth | bcrypt + dual JWT (client/admin) + GitHub OAuth |
+| Auth | bcrypt + JWT with role-based admin; GitHub OAuth is hidden until configured |
 | Hosting | VPS — Nginx reverse proxy + PM2; Cloudflare CDN/SSL in front |
-| Forum | Flarum (PHP + dedicated MySQL), SSO via backend OAuth2 |
+| Payments | PayPal checkout with PayPal/Card plus wallet integrations where eligible |
+| Forum | Flarum (PHP + dedicated MySQL); SSO is deferred |
 
 ## Local development
 ```bash
@@ -46,12 +52,13 @@ node server.js         # serves frontend + API on http://localhost:PORT
 ```
 
 ## Deployment
-Push to GitHub → on VPS: `git pull && pm2 restart [BRAND]` (see `ARCHITECTURE.md` → Deployment & Operations).
+Deploy to the VPS app directory `/var/www/rogersense`, then restart PM2 process `rogersense`.
+GitHub should remain the source of truth; do not copy `.env`, `node_modules`, or `logs`.
 
 ## Notes
 - All public-facing content in English; admin UI may be bilingual.
-- No standard pricing — all quotes are custom.
-- `[BRAND]` placeholders are replaced once the brand name is finalized.
+- Custom briefs are quoted by the team; store products use fixed online pricing.
+- `rogersense.com` is the canonical domain; `www.rogersense.com` redirects to it.
 
 ## Repository
 `https://github.com/andrewljf001/rogersense`

@@ -786,3 +786,11 @@ tr:hover td { background: var(--color-bg-2); }
   transition: color 0.15s;
 }
 .nav-drawer-panel a:hover { color: var(--color-text); }
+
+/* Footer legal links row */
+.footer-legal {
+  display: flex; gap: 18px; flex-wrap: wrap; justify-content: center;
+  padding: 16px 0 4px;
+}
+.footer-legal a { color: var(--color-text-muted); font-size: 0.82rem; }
+.footer-legal a:hover { color: var(--color-text); }

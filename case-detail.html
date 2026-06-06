@@ -14,6 +14,16 @@
     .lightbox img { max-width:90vw; max-height:88vh; border-radius:var(--radius-md); }
     .lightbox-close { position:absolute; top:20px; right:24px; color:#fff; font-size:1.8rem; cursor:pointer; background:none; border:none; }
   </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-FN79CFWQP1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-FN79CFWQP1');
+</script>
+  <link rel="icon" href="/favicon.svg?v=20260606" type="image/svg+xml"/>
 </head>
 <body>
 <nav class="nav">
@@ -23,11 +33,26 @@
       <span class="nav-logo-sub">System Solutions</span>
     </a>
     <ul class="nav-links">
-      <li><a href="cases.html">← All Cases</a></li>
+      <li><a href="/#how-it-works">How it works</a></li>
+      <li><a href="shop.html">Store</a></li>
+      <li><a href="cases.html" class="active">Cases</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
     </ul>
     <div class="nav-actions" id="nav-actions"></div>
+    <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
   </div>
 </nav>
+<div class="nav-drawer" id="nav-drawer">
+  <div class="nav-drawer-overlay" id="drawer-overlay"></div>
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="drawer-close">✕</button>
+    <a href="/">Home</a><a href="/#how-it-works">How it works</a><a href="shop.html">Store</a><a href="cases.html">Cases</a><a href="blog.html">Blog</a><a href="about.html">About</a><a href="contact.html">Contact</a>
+    <a href="https://forum.rogersense.com" target="_blank">Forum</a>
+  </div>
+</div>
 
 <main id="case-main" style="padding:48px 0 80px;">
   <div class="container" style="max-width:820px;">
@@ -58,18 +83,36 @@
 <footer class="footer">
   <div class="container">
     <div class="footer-inner">
-      <div><p class="footer-brand-name">Rogersense</p><p class="footer-brand-desc">End-to-end product engineering.</p></div>
-      <div class="footer-col"><h4>Company</h4><ul>
+      <div>
+        <p class="footer-brand-name">Rogersense</p>
+        <p class="footer-brand-desc">End-to-end product engineering.<br>Hardware · Firmware · Mechanical.</p>
+      </div>
+      <div class="footer-col"><h4>Explore</h4><ul>
+        <li><a href="shop.html">Store</a></li>
         <li><a href="cases.html">Cases</a></li>
+        <li><a href="blog.html">Blog</a></li>
         <li><a href="about.html">About</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>Company</h4><ul>
+        <li><a href="contact.html">Contact</a></li>
         <li><a href="quote.html">Get a Quote</a></li>
+        <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul>
+        <li><a href="privacy.html">Privacy Policy</a></li><li><a href="terms.html">Terms of Service</a></li>
+        <li><a href="returns.html">Returns &amp; Refunds</a></li>
+        <li><a href="shipping.html">Shipping</a></li>
+        <li><a href="gdpr.html">Data Deletion</a></li>
       </ul></div>
     </div>
-    <div class="footer-bottom"><span>© 2025 Rogersense.</span></div>
+    <div class="footer-bottom">
+      <span>© 2025 Rogersense.</span>
+      <span>Custom engineering · In-stock hardware</span>
+    </div>
   </div>
 </footer>
 
-<script src="assets/main.js"></script>
+<script src="assets/main.js?v=4"></script>
 <script>
   const slug = new URLSearchParams(location.search).get('slug');
 

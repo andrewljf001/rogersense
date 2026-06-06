@@ -9,7 +9,22 @@
 server {
     listen 80;
     listen [::]:80;
-    server_name rogersense.com www.rogersense.com;
+    server_name www.rogersense.com;
+
+    # Allow ACME HTTP-01 challenge (Let's Encrypt) to pass through.
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+
+    location / {
+        return 301 https://rogersense.com$request_uri;
+    }
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name rogersense.com;
 
     # Allow ACME HTTP-01 challenge (Let's Encrypt) to pass through.
     location /.well-known/acme-challenge/ {

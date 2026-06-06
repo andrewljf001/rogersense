@@ -9,6 +9,7 @@
  * asserting both happy paths and authorization rules.
  */
 const { spawn } = require('node:child_process');
+const http = require('node:http');
 
 const PORT = 3099;
 const BASE = `http://localhost:${PORT}`;
@@ -39,17 +40,37 @@ async function waitForHealth(timeoutMs = 8000) {
   throw new Error('server did not become healthy in time');
 }
 
+function requestWithHost(path, host) {
+  return new Promise((resolve, reject) => {
+    const req = http.request({ host: '127.0.0.1', port: PORT, path, headers: { Host: host } }, res => {
+      res.resume();
+      res.on('end', () => resolve({ status: res.statusCode, headers: res.headers }));
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
+
 async function run() {
-  // ── SEO routes ───────────────────────────────────────────
+  // ── Public SEO/security routes ───────────────────────────
+  const health = await fetch(BASE + '/health');
+  check('security: x-powered-by hidden', !health.headers.has('x-powered-by'));
+  check('security: nosniff header set', health.headers.get('x-content-type-options') === 'nosniff');
+  const evilCors = await fetch(BASE + '/api/settings/public', { headers: { Origin: 'https://evil.example' } });
+  check('security: unknown CORS origin not reflected', !evilCors.headers.has('access-control-allow-origin'));
+  const wwwRedirect = await requestWithHost('/', 'www.rogersense.com');
+  check('www host redirects to canonical domain', wwwRedirect.status === 301 && /\/\/rogersense\.com\//.test(wwwRedirect.headers.location || ''));
+
   const robots = await fetch(BASE + '/robots.txt');
   const robotsText = await robots.text();
   check('robots.txt → 200 text', robots.status === 200 && robotsText.includes('User-agent: *'));
-  check('robots.txt declares sitemap', robotsText.includes('Sitemap: https://rogersense.com/sitemap.xml'));
+  check('robots.txt declares sitemap index', robotsText.includes('Sitemap: https://rogersense.com/sitemap_index.xml'));
 
   const sitemap = await fetch(BASE + '/sitemap.xml');
   const sitemapText = await sitemap.text();
   check('sitemap.xml → 200 XML urlset', sitemap.status === 200 && sitemapText.includes('<urlset'));
   check('sitemap.xml includes canonical home', sitemapText.includes('<loc>https://rogersense.com/</loc>'));
+  check('sitemap.xml includes public static pages', ['/contact.html', '/track.html', '/privacy.html', '/terms.html'].every(path => sitemapText.includes(`<loc>https://rogersense.com${path}</loc>`)));
 
   const sitemapIndex = await fetch(BASE + '/sitemap_index.xml');
   const sitemapIndexText = await sitemapIndex.text();
@@ -157,9 +178,11 @@ async function run() {
   const presignNoAuth = await req('POST', '/upload/presign', { body: { filename: 'a.zip' } });
   check('presign without token → 401', presignNoAuth.status === 401);
 
-  // /img public redirect — serves cases/ only, never private prefixes.
+  // /img public redirect — serves case/product assets, never private prefixes.
   const imgCase = await fetch(`${BASE}/img?key=cases/x.jpg`, { redirect: 'manual' });
   check('/img cases/ → 302 redirect', imgCase.status === 302);
+  const imgProduct = await fetch(`${BASE}/img?key=products/x.jpg`, { redirect: 'manual' });
+  check('/img products/ → 302 redirect', imgProduct.status === 302);
   const imgQuote = await fetch(`${BASE}/img?key=quotes/secret.pdf`, { redirect: 'manual' });
   check('/img quotes/ → 403 (private blocked)', imgQuote.status === 403);
   const imgBackup = await fetch(`${BASE}/img?key=backups/d1/latest.json.gz`, { redirect: 'manual' });
@@ -179,6 +202,7 @@ async function run() {
       DB_DRIVER: 'sqlite',
       SQLITE_PATH: ':memory:',
       PORT: String(PORT),
+      SITE_URL: 'https://rogersense.com',
       JWT_SECRET: 'e2e-test-secret',
       DEFAULT_ADMIN_EMAIL: ADMIN_EMAIL,
       DEFAULT_ADMIN_PASSWORD: ADMIN_PASS,

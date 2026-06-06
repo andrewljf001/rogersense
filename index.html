@@ -34,6 +34,16 @@
     .devboard-feature { display:flex; align-items:center; gap:14px; }
     .devboard-icon { width:40px; height:40px; flex-shrink:0; border-radius:var(--radius-md); background:var(--color-bg); border:1px solid var(--color-border); display:flex; align-items:center; justify-content:center; font-size:1.1rem; }
   </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-FN79CFWQP1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-FN79CFWQP1');
+</script>
+  <link rel="icon" href="/favicon.svg?v=20260606" type="image/svg+xml"/>
 </head>
 <body>
 
@@ -44,9 +54,12 @@
       <span class="nav-logo-sub">System Solutions</span>
     </a>
     <ul class="nav-links">
-      <li><a href="#how-it-works">How it works</a></li>
+      <li><a href="/#how-it-works">How it works</a></li>
+      <li><a href="shop.html">Store</a></li>
       <li><a href="cases.html">Cases</a></li>
+      <li><a href="blog.html">Blog</a></li>
       <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
       <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
     </ul>
     <div class="nav-actions" id="nav-actions">
@@ -63,12 +76,8 @@
   <div class="nav-drawer-overlay" id="drawer-overlay"></div>
   <div class="nav-drawer-panel">
     <button class="nav-drawer-close" id="drawer-close">✕</button>
-    <a href="#how-it-works">How it works</a>
-    <a href="cases.html">Cases</a>
-    <a href="about.html">About</a>
+    <a href="/">Home</a><a href="/#how-it-works">How it works</a><a href="shop.html">Store</a><a href="cases.html">Cases</a><a href="blog.html">Blog</a><a href="about.html">About</a><a href="contact.html">Contact</a>
     <a href="https://forum.rogersense.com" target="_blank">Forum</a>
-    <a href="/login.html">Sign in</a>
-    <a href="/quote.html" class="btn btn-primary" style="margin-top:16px;justify-content:center;padding:14px;">Submit Brief →</a>
   </div>
 </div>
 
@@ -286,33 +295,34 @@
     <div class="footer-inner">
       <div>
         <p class="footer-brand-name">Rogersense</p>
-        <p class="footer-brand-desc">End-to-end product engineering.<br>Hardware · Firmware · Mechanical.<br>Custom quote, no fixed pricing.</p>
+        <p class="footer-brand-desc">End-to-end product engineering.<br>Hardware · Firmware · Mechanical.</p>
       </div>
-      <div class="footer-col"><h4>Services</h4><ul>
-        <li><a href="/quote.html">Hardware Design</a></li>
-        <li><a href="/quote.html">Firmware &amp; Software</a></li>
-        <li><a href="/quote.html">Mechanical Design</a></li>
-        <li><a href="/quote.html">ID Design (Partner)</a></li>
+      <div class="footer-col"><h4>Explore</h4><ul>
+        <li><a href="shop.html">Store</a></li>
+        <li><a href="cases.html">Cases</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="about.html">About</a></li>
       </ul></div>
       <div class="footer-col"><h4>Company</h4><ul>
-        <li><a href="cases.html">Cases</a></li>
-        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
         <li><a href="quote.html">Get a Quote</a></li>
-      </ul></div>
-      <div class="footer-col"><h4>Community</h4><ul>
         <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
-        <li><a href="cases.html?category=devboard">Dev Boards</a></li>
-        <li><a href="https://github.com/andrewljf001" target="_blank">GitHub</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul>
+        <li><a href="privacy.html">Privacy Policy</a></li><li><a href="terms.html">Terms of Service</a></li>
+        <li><a href="returns.html">Returns &amp; Refunds</a></li>
+        <li><a href="shipping.html">Shipping</a></li>
+        <li><a href="gdpr.html">Data Deletion</a></li>
       </ul></div>
     </div>
     <div class="footer-bottom">
-      <span>© 2025 Rogersense. All rights reserved.</span>
-      <span>Custom engineering · No fixed pricing</span>
+      <span>© 2025 Rogersense.</span>
+      <span>Custom engineering · In-stock hardware</span>
     </div>
   </div>
 </footer>
 
-<script src="assets/main.js"></script>
+<script src="assets/main.js?v=4"></script>
 <script>
   document.querySelectorAll('.discipline-card').forEach(c => c.addEventListener('click', () => c.classList.toggle('selected')));
   document.querySelectorAll('.deliverable-btn').forEach(btn => btn.addEventListener('click', () => {

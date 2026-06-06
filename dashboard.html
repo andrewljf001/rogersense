@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard — Rogersense</title>
   <link rel="stylesheet" href="assets/style.css"/>
+  <link rel="icon" href="/favicon.svg?v=20260606" type="image/svg+xml"/>
 </head>
 <body>
 <nav class="nav">
@@ -14,7 +15,10 @@
       <span class="nav-logo-sub">System Solutions</span>
     </a>
     <ul class="nav-links">
+      <li><a href="shop.html">Store</a></li>
       <li><a href="cases.html">Cases</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="contact.html">Contact</a></li>
       <li><a href="quote.html">New Brief</a></li>
     </ul>
     <div class="nav-actions" id="nav-actions"></div>
@@ -29,6 +33,7 @@
       <aside class="sidebar">
         <ul class="sidebar-nav">
           <li><a href="#" class="active" data-view="quotes">📋 My Briefs</a></li>
+          <li><a href="#" data-view="orders">🛒 My Orders</a></li>
           <li><a href="#" data-view="profile">👤 Profile</a></li>
           <li><a href="quote.html">+ New Brief</a></li>
           <li><a href="#" onclick="Auth.logout()">Sign out</a></li>
@@ -91,6 +96,20 @@
           </div>
         </div>
 
+        <!-- Orders view -->
+        <div id="view-orders" style="display:none;">
+          <h2 style="font-size:1.3rem;margin-bottom:24px;">My Orders</h2>
+          <div id="orders-loading" style="padding:40px;text-align:center;color:var(--color-text-light);">Loading…</div>
+          <div id="orders-empty" style="display:none;padding:50px 20px;text-align:center;">
+            <p style="color:var(--color-text-muted);margin-bottom:18px;">No orders yet.</p>
+            <a href="shop.html" class="btn btn-primary">Browse the Store →</a>
+          </div>
+          <div class="table-wrap" id="my-orders-table" style="display:none;">
+            <table><thead><tr><th>Order</th><th>Product</th><th>Total</th><th>Status</th><th>Tracking</th><th>Date</th></tr></thead>
+              <tbody id="my-orders-tbody"></tbody></table>
+          </div>
+        </div>
+
         <!-- Profile view -->
         <div id="view-profile" style="display:none;">
           <h2 style="font-size:1.3rem;margin-bottom:24px;">Profile</h2>
@@ -116,7 +135,7 @@
   </div>
 </main>
 
-<script src="assets/main.js"></script>
+<script src="assets/main.js?v=4"></script>
 <script>
   requireAuth();
 
@@ -137,13 +156,34 @@
       showView(link.dataset.view);
       document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
       link.classList.add('active');
+      if (link.dataset.view === 'orders') loadMyOrders();
     });
   });
 
   function showView(name) {
-    ['quotes','quote-detail','profile'].forEach(v =>
+    ['quotes','quote-detail','orders','profile'].forEach(v =>
       document.getElementById(`view-${v}`).style.display = v === name ? 'block' : 'none'
     );
+  }
+
+  const ostat = s => `<span class="status-badge status-${s==='paid'?'quoted':(s==='shipped'?'production':(s==='completed'?'completed':'pending'))}">${s}</span>`;
+  async function loadMyOrders() {
+    try {
+      const data = await apiFetch('/me/product-orders');
+      const orders = data?.orders || [];
+      document.getElementById('orders-loading').style.display = 'none';
+      if (!orders.length) { document.getElementById('orders-empty').style.display = 'block'; return; }
+      document.getElementById('my-orders-table').style.display = 'block';
+      document.getElementById('my-orders-tbody').innerHTML = orders.map(o => `
+        <tr>
+          <td style="font-family:monospace;font-size:0.8rem;">${o.order_no}</td>
+          <td style="font-size:0.85rem;">${o.product_name} ×${o.qty}</td>
+          <td style="font-size:0.85rem;">$${Number(o.total_paid||0).toFixed(2)}</td>
+          <td>${ostat(o.status)}</td>
+          <td style="font-size:0.8rem;">${o.tracking_no ? o.tracking_no + (o.carrier?` (${o.carrier})`:'') + ` · <a href="track.html?order=${encodeURIComponent(o.order_no)}">track</a>` : '—'}</td>
+          <td style="font-size:0.8rem;color:var(--color-text-muted);">${formatDate(o.created_at)}</td>
+        </tr>`).join('');
+    } catch(_) { document.getElementById('orders-loading').textContent = 'Could not load orders.'; }
   }
 
   // Load quotes

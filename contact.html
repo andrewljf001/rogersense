@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contact — Rogersense</title>
+  <meta name="description" content="Get in touch with the Rogersense team — email, WhatsApp, or send us a message."/>
+  <link rel="stylesheet" href="assets/style.css"/>
+  <style>
+    .contact-wrap{display:grid;grid-template-columns:1fr 1.2fr;gap:40px;align-items:start;}
+    @media(max-width:760px){.contact-wrap{grid-template-columns:1fr;}}
+    .info-card{display:flex;gap:14px;align-items:flex-start;padding:16px 0;border-bottom:1px solid var(--color-border);}
+    .info-ico{width:40px;height:40px;border-radius:10px;background:var(--color-bg-2);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+    .info-card h4{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);margin:0 0 3px;}
+    .info-card a,.info-card p{margin:0;font-size:.95rem;}
+    .field{margin-bottom:16px;}
+    .field label{display:block;font-size:.82rem;font-weight:600;margin-bottom:5px;}
+    .field input,.field textarea{width:100%;padding:10px 13px;border:1px solid var(--color-border);border-radius:8px;font:inherit;}
+    .field textarea{min-height:130px;resize:vertical;}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-FN79CFWQP1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-FN79CFWQP1');
+</script>
+  <link rel="icon" href="/favicon.svg?v=20260606" type="image/svg+xml"/>
+</head>
+<body>
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo"><span class="nav-logo-name">Rogersense</span><span class="nav-logo-sub">System Solutions</span></a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it works</a></li>
+      <li><a href="shop.html">Store</a></li>
+      <li><a href="cases.html">Cases</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html" class="active">Contact</a></li>
+      <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-actions"></div>
+    <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="nav-drawer" id="nav-drawer">
+  <div class="nav-drawer-overlay" id="drawer-overlay"></div>
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="drawer-close">✕</button>
+    <a href="/">Home</a><a href="/#how-it-works">How it works</a><a href="shop.html">Store</a><a href="cases.html">Cases</a><a href="blog.html">Blog</a><a href="about.html">About</a><a href="contact.html">Contact</a>
+    <a href="https://forum.rogersense.com" target="_blank">Forum</a>
+  </div>
+</div>
+
+<section style="padding:52px 0 36px;border-bottom:1px solid var(--color-border);">
+  <div class="container">
+    <p class="eyebrow mb-8">Contact</p>
+    <h1 style="font-size:clamp(1.6rem,4vw,2.2rem);margin-bottom:10px;">Get in touch.</h1>
+    <p style="max-width:560px;">Questions about our boards, tools or a custom project? Reach us below — or, for a project quote, <a href="quote.html">submit a brief →</a></p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="contact-wrap">
+      <!-- Info -->
+      <div>
+        <div class="info-card"><div class="info-ico">✉️</div><div><h4>Email</h4><a id="c-email" href="#">—</a></div></div>
+        <div class="info-card" id="c-wa-card" style="display:none;"><div class="info-ico">💬</div><div><h4>Sales / Business</h4><a id="c-wa" href="#" target="_blank">WhatsApp our sales team</a></div></div>
+        <div class="info-card" id="c-eng-card" style="display:none;"><div class="info-ico">🛠️</div><div><h4>Engineering</h4><a id="c-eng" href="#" target="_blank">WhatsApp an engineer</a></div></div>
+        <div class="info-card" id="c-addr-card" style="display:none;"><div class="info-ico">📍</div><div><h4>Address</h4><p id="c-addr">—</p></div></div>
+        <div class="info-card" id="c-hours-card" style="display:none;"><div class="info-ico">🕘</div><div><h4>Hours</h4><p id="c-hours">—</p></div></div>
+        <div class="info-card" style="border-bottom:none;"><div class="info-ico">💡</div><div><h4>Community</h4><a href="https://forum.rogersense.com" target="_blank">Forum &amp; resources →</a></div></div>
+      </div>
+
+      <!-- Form -->
+      <div style="border:1px solid var(--color-border);border-radius:14px;padding:28px;">
+        <h3 style="font-size:1.05rem;margin-bottom:18px;">Send us a message</h3>
+        <form id="contact-form">
+          <div class="row2">
+            <div class="field"><label>Name</label><input id="f-name" required/></div>
+            <div class="field"><label>Email</label><input id="f-email" type="email" required/></div>
+          </div>
+          <div class="field"><label>Subject</label><input id="f-subject" placeholder="What's this about?"/></div>
+          <div class="field"><label>Message</label><textarea id="f-message" required></textarea></div>
+          <div data-turnstile style="display:none;margin-bottom:14px;"></div>
+          <button type="submit" class="btn btn-primary btn-lg" id="f-submit" style="width:100%;">Send message →</button>
+          <p id="f-result" style="font-size:.85rem;text-align:center;margin-top:12px;"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <p class="footer-brand-name">Rogersense</p>
+        <p class="footer-brand-desc">End-to-end product engineering.<br>Hardware · Firmware · Mechanical.</p>
+      </div>
+      <div class="footer-col"><h4>Explore</h4><ul>
+        <li><a href="shop.html">Store</a></li>
+        <li><a href="cases.html">Cases</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>Company</h4><ul>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="quote.html">Get a Quote</a></li>
+        <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul>
+        <li><a href="privacy.html">Privacy Policy</a></li><li><a href="terms.html">Terms of Service</a></li>
+        <li><a href="returns.html">Returns &amp; Refunds</a></li>
+        <li><a href="shipping.html">Shipping</a></li>
+        <li><a href="gdpr.html">Data Deletion</a></li>
+      </ul></div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Rogersense.</span>
+      <span>Custom engineering · In-stock hardware</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/main.js?v=4"></script>
+<script>
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  async function loadInfo() {
+    try {
+      const c = await apiFetch('/api/settings/public');
+      const email = c.contact_email || '';
+      const eEl = document.getElementById('c-email');
+      if (email) { eEl.textContent = email; eEl.href = 'mailto:' + email; } else { eEl.textContent = 'See form →'; eEl.removeAttribute('href'); }
+      const wa = (c.whatsapp_number || '').replace(/[^0-9]/g, '');
+      if (wa) { document.getElementById('c-wa-card').style.display='flex'; document.getElementById('c-wa').href = 'https://wa.me/' + wa; }
+      const eng = (c.engineer_whatsapp || '').replace(/[^0-9]/g, '');
+      if (eng) { document.getElementById('c-eng-card').style.display='flex'; document.getElementById('c-eng').href = 'https://wa.me/' + eng; }
+      if (c.contact_address) { document.getElementById('c-addr-card').style.display='flex'; document.getElementById('c-addr').textContent = c.contact_address; }
+      if (c.contact_hours) { document.getElementById('c-hours-card').style.display='flex'; document.getElementById('c-hours').textContent = c.contact_hours; }
+    } catch(_) {}
+  }
+  const tsEl = document.querySelector('[data-turnstile]');
+  mountTurnstile(tsEl);
+  document.getElementById('contact-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('f-submit'), out = document.getElementById('f-result');
+    btn.disabled = true; btn.textContent = 'Sending…'; out.textContent = '';
+    try {
+      const r = await apiFetch('/api/contact', { method:'POST', body: JSON.stringify({
+        name: document.getElementById('f-name').value.trim(),
+        email: document.getElementById('f-email').value.trim(),
+        subject: document.getElementById('f-subject').value.trim(),
+        message: document.getElementById('f-message').value.trim(),
+        cf_turnstile: turnstileToken(tsEl),
+      })});
+      out.style.color = 'var(--color-text-success)'; out.textContent = r.message || 'Sent — thank you!';
+      document.getElementById('contact-form').reset();
+    } catch(err) {
+      out.style.color = 'var(--color-accent)'; out.textContent = err.message || 'Could not send. Please email us directly.';
+      turnstileReset(tsEl);
+    } finally { btn.disabled = false; btn.textContent = 'Send message →'; }
+  });
+  loadInfo();
+</script>
+</body>
+</html>
