@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Blog — Rogersense</title>
+  <meta name="description" content="Engineering deep-dives, product announcements and guides from the Rogersense team."/>
+  <link rel="stylesheet" href="assets/style.css"/>
+  <style>
+    .blog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px;}
+    .post-card{display:flex;flex-direction:column;background:var(--color-bg);border:1px solid var(--color-border);border-radius:12px;overflow:hidden;transition:box-shadow .2s,transform .2s;text-decoration:none;color:inherit;}
+    .post-card:hover{box-shadow:0 8px 28px rgba(0,0,0,.10);transform:translateY(-2px);}
+    .post-cover{aspect-ratio:16/9;background:var(--color-bg-2);overflow:hidden;}
+    .post-cover img{width:100%;height:100%;object-fit:cover;}
+    .post-body{padding:18px;display:flex;flex-direction:column;gap:8px;flex:1;}
+    .post-meta{font-size:.72rem;color:var(--color-text-light);}
+    .post-title{font-size:1.08rem;font-weight:600;line-height:1.35;}
+    .post-excerpt{font-size:.875rem;color:var(--color-text-muted);flex:1;}
+  </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-FN79CFWQP1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-FN79CFWQP1');
+</script>
+  <link rel="icon" href="/favicon.svg?v=20260606" type="image/svg+xml"/>
+</head>
+<body>
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo"><span class="nav-logo-name">Rogersense</span><span class="nav-logo-sub">System Solutions</span></a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it works</a></li>
+      <li><a href="shop.html">Store</a></li>
+      <li><a href="cases.html">Cases</a></li>
+      <li><a href="blog.html" class="active">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-actions"></div>
+    <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="nav-drawer" id="nav-drawer">
+  <div class="nav-drawer-overlay" id="drawer-overlay"></div>
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="drawer-close">✕</button>
+    <a href="/">Home</a><a href="/#how-it-works">How it works</a><a href="shop.html">Store</a><a href="cases.html">Cases</a><a href="blog.html">Blog</a><a href="about.html">About</a><a href="contact.html">Contact</a>
+    <a href="https://forum.rogersense.com" target="_blank">Forum</a>
+  </div>
+</div>
+
+<section style="padding:52px 0 36px;border-bottom:1px solid var(--color-border);">
+  <div class="container">
+    <p class="eyebrow mb-8">Blog</p>
+    <h1 style="font-size:clamp(1.6rem,4vw,2.2rem);margin-bottom:10px;">Engineering notes &amp; updates.</h1>
+    <p style="max-width:560px;">Deep-dives, design guides and product announcements from the team.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="blog-grid" id="blog-grid">
+      <div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--color-text-light);">Loading posts…</div>
+    </div>
+    <div id="empty-state" style="display:none;padding:60px 20px;text-align:center;">
+      <p style="color:var(--color-text-muted);">No posts yet — check back soon.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <p class="footer-brand-name">Rogersense</p>
+        <p class="footer-brand-desc">End-to-end product engineering.<br>Hardware · Firmware · Mechanical.</p>
+      </div>
+      <div class="footer-col"><h4>Explore</h4><ul>
+        <li><a href="shop.html">Store</a></li>
+        <li><a href="cases.html">Cases</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>Company</h4><ul>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="quote.html">Get a Quote</a></li>
+        <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul>
+        <li><a href="privacy.html">Privacy Policy</a></li><li><a href="terms.html">Terms of Service</a></li>
+        <li><a href="returns.html">Returns &amp; Refunds</a></li>
+        <li><a href="shipping.html">Shipping</a></li>
+        <li><a href="gdpr.html">Data Deletion</a></li>
+      </ul></div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Rogersense.</span>
+      <span>Custom engineering · In-stock hardware</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/main.js?v=4"></script>
+<script>
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function card(p) {
+    const date = p.published_at || p.created_at;
+    return `<a class="post-card" href="blog-post.html?slug=${encodeURIComponent(p.slug)}">
+      <div class="post-cover">${p.cover_url ? `<img src="${esc(p.cover_url)}" alt="${esc(p.title)}" loading="lazy"/>` : ''}</div>
+      <div class="post-body">
+        <span class="post-meta">${date ? formatDate(date) : ''}${p.author ? ' · ' + esc(p.author) : ''}</span>
+        <span class="post-title">${esc(p.title)}</span>
+        <span class="post-excerpt">${esc(p.excerpt || '')}</span>
+        <span class="case-link">Read →</span>
+      </div></a>`;
+  }
+  async function load() {
+    const grid = document.getElementById('blog-grid');
+    try {
+      const data = await apiFetch('/api/posts');
+      const posts = data.posts || [];
+      if (!posts.length) { grid.style.display='none'; document.getElementById('empty-state').style.display='block'; return; }
+      grid.innerHTML = posts.map(card).join('');
+    } catch (e) {
+      grid.innerHTML = `<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--color-text-light);">Couldn't load posts.</div>`;
+    }
+  }
+  load();
+</script>
+</body>
+</html>

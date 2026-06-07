@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Track Order — Rogersense</title>
+  <meta name="description" content="Track your Rogersense order status and shipping."/>
+  <link rel="icon" href="/favicon.svg?v=20260606" type="image/svg+xml"/>
+  <link rel="stylesheet" href="assets/style.css"/>
+  <style>
+    .trk{max-width:520px;}
+    .trk .field{margin-bottom:16px;}
+    .trk label{display:block;font-size:.82rem;font-weight:600;margin-bottom:5px;}
+    .trk input{width:100%;padding:10px 13px;border:1px solid var(--color-border);border-radius:8px;font:inherit;}
+    .ord-card{border:1px solid var(--color-border);border-radius:12px;padding:22px;margin-top:24px;}
+    .ord-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--color-border);font-size:.9rem;}
+    .ord-row:last-child{border:none;}
+    .ord-row span:first-child{color:var(--color-text-muted);}
+    .badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:.78rem;font-weight:600;}
+    .b-paid{background:#0d948822;color:#0d9488;} .b-shipped{background:#2563eb22;color:#60a5fa;}
+    .b-completed{background:#16a34a22;color:#4ade80;} .b-pending{background:#f59e0b22;color:#f59e0b;} .b-cancelled{background:#c0392b22;color:#f87171;}
+  </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-FN79CFWQP1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-FN79CFWQP1');
+</script>
+</head>
+<body>
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo"><span class="nav-logo-name">Rogersense</span><span class="nav-logo-sub">System Solutions</span></a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it works</a></li>
+      <li><a href="shop.html">Store</a></li>
+      <li><a href="cases.html">Cases</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-actions"></div>
+    <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="nav-drawer" id="nav-drawer">
+  <div class="nav-drawer-overlay" id="drawer-overlay"></div>
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="drawer-close">✕</button>
+    <a href="/">Home</a><a href="/#how-it-works">How it works</a><a href="shop.html">Store</a><a href="cases.html">Cases</a><a href="blog.html">Blog</a><a href="about.html">About</a><a href="contact.html">Contact</a>
+    <a href="https://forum.rogersense.com" target="_blank">Forum</a>
+  </div>
+</div>
+
+<section style="padding:52px 0 28px;border-bottom:1px solid var(--color-border);">
+  <div class="container">
+    <p class="eyebrow mb-8">Orders</p>
+    <h1 style="font-size:clamp(1.6rem,4vw,2.2rem);margin-bottom:8px;">Track your order</h1>
+    <p style="max-width:520px;">Enter your order number and email to see status and shipping. Logged in? See all your orders in your <a href="dashboard.html" style="color:#0d9488;">dashboard</a>.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="trk">
+      <form id="track-form">
+        <div class="field"><label>Order number</label><input id="t-order" placeholder="RP2606XXXX" required/></div>
+        <div class="field"><label>Email</label><input id="t-email" type="email" placeholder="the email on your order" required/></div>
+        <button type="submit" class="btn btn-primary btn-lg" id="t-submit">Track order →</button>
+        <p id="t-error" style="font-size:.85rem;color:var(--color-accent);margin-top:10px;display:none;"></p>
+      </form>
+      <div id="t-result"></div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div><p class="footer-brand-name">Rogersense</p><p class="footer-brand-desc">End-to-end product engineering.<br>Hardware · Firmware · Mechanical.</p></div>
+      <div class="footer-col"><h4>Explore</h4><ul><li><a href="shop.html">Store</a></li><li><a href="cases.html">Cases</a></li><li><a href="blog.html">Blog</a></li><li><a href="about.html">About</a></li></ul></div>
+      <div class="footer-col"><h4>Company</h4><ul><li><a href="contact.html">Contact</a></li><li><a href="track.html">Track Order</a></li><li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li></ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul><li><a href="privacy.html">Privacy Policy</a></li><li><a href="terms.html">Terms of Service</a></li><li><a href="returns.html">Returns &amp; Refunds</a></li><li><a href="shipping.html">Shipping</a></li><li><a href="gdpr.html">Data Deletion</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><span>© 2025 Rogersense.</span><span>Custom engineering · In-stock hardware</span></div>
+  </div>
+</footer>
+
+<script src="assets/main.js?v=4"></script>
+<script>
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const qp = new URLSearchParams(location.search);
+  if (qp.get('order')) document.getElementById('t-order').value = qp.get('order');
+  function renderOrder(o) {
+    document.getElementById('t-result').innerHTML = `
+      <div class="ord-card">
+        <h3 style="font-size:1.05rem;margin:0 0 14px;">Order ${esc(o.order_no)}</h3>
+        <div class="ord-row"><span>Product</span><span>${esc(o.product_name)} ×${o.qty}</span></div>
+        <div class="ord-row"><span>Total paid</span><span>$${Number(o.total_paid||0).toFixed(2)}</span></div>
+        <div class="ord-row"><span>Status</span><span class="badge b-${o.status}">${o.status}</span></div>
+        <div class="ord-row"><span>Tracking</span><span>${o.tracking_no?esc(o.tracking_no)+(o.carrier?' ('+esc(o.carrier)+')':''):'—'}</span></div>
+        <div class="ord-row"><span>Ordered</span><span>${formatDate(o.created_at)}</span></div>
+      </div>`;
+  }
+  document.getElementById('track-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const err = document.getElementById('t-error'); err.style.display='none';
+    const btn = document.getElementById('t-submit'); btn.disabled=true; btn.textContent='Searching…';
+    document.getElementById('t-result').innerHTML='';
+    try {
+      const r = await apiFetch('/api/orders/track', { method:'POST', body: JSON.stringify({
+        order_no: document.getElementById('t-order').value.trim(),
+        email: document.getElementById('t-email').value.trim(),
+      })});
+      renderOrder(r.order);
+    } catch(e) { err.textContent = e.message || 'Order not found.'; err.style.display='block'; }
+    finally { btn.disabled=false; btn.textContent='Track order →'; }
+  });
+  // Auto-track if both prefilled
+  if (qp.get('order') && Auth.getUser && Auth.getUser()?.email) {
+    document.getElementById('t-email').value = Auth.getUser().email;
+  }
+</script>
+</body>
+</html>

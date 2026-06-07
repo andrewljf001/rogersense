@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Case — Rogersense</title>
+  <link rel="stylesheet" href="assets/style.css"/>
+  <style>
+    .gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; margin-top:24px; }
+    .gallery img { width:100%; aspect-ratio:16/10; object-fit:cover; border-radius:var(--radius-md); border:1px solid var(--color-border); cursor:pointer; transition:transform 0.2s; }
+    .gallery img:hover { transform:scale(1.02); }
+    .lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:999; align-items:center; justify-content:center; }
+    .lightbox.open { display:flex; }
+    .lightbox img { max-width:90vw; max-height:88vh; border-radius:var(--radius-md); }
+    .lightbox-close { position:absolute; top:20px; right:24px; color:#fff; font-size:1.8rem; cursor:pointer; background:none; border:none; }
+  </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-FN79CFWQP1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-FN79CFWQP1');
+</script>
+  <link rel="icon" href="/favicon.svg?v=20260606" type="image/svg+xml"/>
+</head>
+<body>
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo">
+      <span class="nav-logo-name">Rogersense</span>
+      <span class="nav-logo-sub">System Solutions</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it works</a></li>
+      <li><a href="shop.html">Store</a></li>
+      <li><a href="cases.html" class="active">Cases</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-actions"></div>
+    <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="nav-drawer" id="nav-drawer">
+  <div class="nav-drawer-overlay" id="drawer-overlay"></div>
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="drawer-close">✕</button>
+    <a href="/">Home</a><a href="/#how-it-works">How it works</a><a href="shop.html">Store</a><a href="cases.html">Cases</a><a href="blog.html">Blog</a><a href="about.html">About</a><a href="contact.html">Contact</a>
+    <a href="https://forum.rogersense.com" target="_blank">Forum</a>
+  </div>
+</div>
+
+<main id="case-main" style="padding:48px 0 80px;">
+  <div class="container" style="max-width:820px;">
+    <div id="loading" style="text-align:center;padding:60px;color:var(--color-text-light);">Loading case…</div>
+    <div id="case-content" style="display:none;"></div>
+    <div id="not-found" style="display:none;text-align:center;padding:60px;">
+      <p style="color:var(--color-text-muted);margin-bottom:20px;">Case not found.</p>
+      <a href="cases.html" class="btn btn-outline">View all cases</a>
+    </div>
+  </div>
+</main>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightbox-close">✕</button>
+  <img id="lightbox-img" src="" alt=""/>
+</div>
+
+<!-- CTA -->
+<section style="background:var(--color-bg-2);padding:60px 0;border-top:1px solid var(--color-border);" id="cta-section" style="display:none;">
+  <div class="container" style="text-align:center;">
+    <h2 style="margin-bottom:10px;">Have a similar project?</h2>
+    <p style="margin-bottom:24px;">Tell us what you need and we'll get back with a custom quote.</p>
+    <a href="quote.html" class="btn btn-primary btn-lg">Submit Your Brief →</a>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <p class="footer-brand-name">Rogersense</p>
+        <p class="footer-brand-desc">End-to-end product engineering.<br>Hardware · Firmware · Mechanical.</p>
+      </div>
+      <div class="footer-col"><h4>Explore</h4><ul>
+        <li><a href="shop.html">Store</a></li>
+        <li><a href="cases.html">Cases</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>Company</h4><ul>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="quote.html">Get a Quote</a></li>
+        <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul>
+        <li><a href="privacy.html">Privacy Policy</a></li><li><a href="terms.html">Terms of Service</a></li>
+        <li><a href="returns.html">Returns &amp; Refunds</a></li>
+        <li><a href="shipping.html">Shipping</a></li>
+        <li><a href="gdpr.html">Data Deletion</a></li>
+      </ul></div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Rogersense.</span>
+      <span>Custom engineering · In-stock hardware</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/main.js?v=4"></script>
+<script>
+  const slug = new URLSearchParams(location.search).get('slug');
+
+  // Placeholder data (same as cases.html)
+  const PLACEHOLDER_CASES = {
+    'smart-pet-door': {
+      slug:'smart-pet-door', title:'Smart Pet Door', category:'iot',
+      tags:['IoT','BLE','AWS','Firmware','Mobile App','Power Management'],
+      cover_image:'', images:[],
+      description:'Automated BLE-enabled pet door for a startup company. The project features aggressive power management, BLE scanning, variable speed motor control, mobile app integration, and AWS cloud backend. Delivered as a production-ready PCBA.',
+      disciplines:['Hardware','Firmware','Software'],
+      deliverable:'PCBA'
+    },
+    'remote-medical-hub': {
+      slug:'remote-medical-hub', title:'Remote Medical Hub', category:'medical',
+      tags:['Medical','Azure','IoT','RTLS','Hardware'],
+      cover_image:'', images:[],
+      description:'Real-time location service IoT product for a large medical device company. Includes all hardware and firmware with Azure cloud integration for tracking and monitoring medical devices in clinical environments.',
+      disciplines:['Hardware','Firmware','Software'],
+      deliverable:'Finished product'
+    },
+    'solar-pump-controller': {
+      slug:'solar-pump-controller', title:'Solar Pump Controller', category:'industrial',
+      tags:['Industrial','Solar','3-phase','VFD','Power'],
+      cover_image:'', images:[],
+      description:'3-phase variable frequency drive designed and optimised for a direct solar DC input. Developed for a company that installs remote solar pumping applications. Handles variable input voltage from PV panels and drives 3-phase AC motors efficiently.',
+      disciplines:['Hardware','Firmware'],
+      deliverable:'PCBA'
+    },
+    'training-tool': {
+      slug:'training-tool', title:'Live Fire Training Tool', category:'industrial',
+      tags:['Military','BLE','Mobile App','Firmware'],
+      cover_image:'', images:[],
+      description:'Complete hardware, firmware, and mobile app development for a live fire training tool serving military and law enforcement training scenarios. Includes all hardware design, embedded firmware, and companion mobile application.',
+      disciplines:['Hardware','Firmware','Software'],
+      deliverable:'Finished product'
+    },
+    'prosthetic-controller': {
+      slug:'prosthetic-controller', title:'Prosthetic Controller', category:'consumer',
+      tags:['Medical','BLE','Analog Signal','Power Management'],
+      cover_image:'', images:[],
+      description:'Hardware and firmware solutions for a manufacturer of innovative prosthetic controls. Features BLE communication, power management, analog signal reading, and complex mathematical manipulation of control signals for natural limb movement.',
+      disciplines:['Hardware','Firmware'],
+      deliverable:'PCBA'
+    },
+    'dev-board-v1': {
+      slug:'dev-board-v1', title:'Dev Board v1.0', category:'devboard',
+      tags:['Dev Board','SDK','Open Source','ESP32'],
+      cover_image:'', images:[],
+      description:'Our first open development board based on ESP32. Comes with a full SDK, example code, and community support. Designed for rapid IoT prototyping and as a foundation for custom product development.',
+      disciplines:['Hardware','Firmware','Software'],
+      deliverable:'Dev Board + SDK'
+    }
+  };
+
+  async function loadCase() {
+    if (!slug) { showNotFound(); return; }
+    try {
+      const data = await CasesAPI.get(slug);
+      if (data?.case) { renderCase(data.case); }
+      else { showNotFound(); }
+    } catch(_) {
+      // Fallback to placeholder
+      const c = PLACEHOLDER_CASES[slug];
+      if (c) renderCase(c);
+      else showNotFound();
+    }
+  }
+
+  function renderCase(c) {
+    document.title = `${c.title} — Rogersense`;
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('case-content').style.display = 'block';
+    document.getElementById('cta-section').style.display = 'block';
+
+    document.getElementById('case-content').innerHTML = `
+      <a href="cases.html" class="btn btn-ghost" style="margin-bottom:24px;">← All Cases</a>
+
+      <div class="case-tags" style="margin-bottom:12px;">
+        ${(c.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}
+      </div>
+
+      <h1 style="font-size:clamp(1.6rem,4vw,2.2rem);margin-bottom:16px;">${c.title}</h1>
+
+      <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:32px;font-size:0.875rem;color:var(--color-text-muted);">
+        <span>📁 ${c.category?.charAt(0).toUpperCase() + c.category?.slice(1)}</span>
+        ${c.disciplines?.length ? `<span>🔧 ${c.disciplines.join(' · ')}</span>` : ''}
+        ${c.deliverable ? `<span>📦 ${c.deliverable}</span>` : ''}
+      </div>
+
+      ${c.cover_image
+        ? `<div style="border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--color-border);margin-bottom:32px;aspect-ratio:16/9;">
+             <img src="${c.cover_image}" alt="${c.title}" style="width:100%;height:100%;object-fit:cover;"/>
+           </div>`
+        : `<div style="border-radius:var(--radius-lg);border:1px dashed var(--color-border);margin-bottom:32px;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:var(--color-text-light);">No cover image</div>`}
+
+      <div style="font-size:1rem;line-height:1.8;color:var(--color-text);max-width:640px;">
+        <p>${c.description}</p>
+      </div>
+
+      ${c.images?.length ? `
+        <h3 style="font-family:var(--font-sans);font-size:1rem;font-weight:600;margin:32px 0 4px;">Photos</h3>
+        <div class="gallery" id="gallery">
+          ${c.images.map(img => `<img src="${img}" alt="${c.title}" loading="lazy"/>`).join('')}
+        </div>` : ''}
+    `;
+
+    // Lightbox
+    document.querySelectorAll('#gallery img').forEach(img => {
+      img.addEventListener('click', () => {
+        document.getElementById('lightbox-img').src = img.src;
+        document.getElementById('lightbox').classList.add('open');
+      });
+    });
+  }
+
+  function showNotFound() {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('not-found').style.display = 'block';
+  }
+
+  document.getElementById('lightbox').addEventListener('click', e => {
+    if (e.target === document.getElementById('lightbox') || e.target === document.getElementById('lightbox-close')) {
+      document.getElementById('lightbox').classList.remove('open');
+    }
+  });
+
+  loadCase();
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+# Nginx vhost for forum.rogersense.com — Flarum (PHP) on a dedicated FPM pool.
+# Isolated from other sites. Installed by deploy/setup-forum-web.sh.
+#
+# SSL added later by:
+#   sudo certbot --nginx -d forum.rogersense.com
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name forum.rogersense.com;
+
+    root /var/www/rogersense-forum/public;
+    index index.php;
+
+    client_max_body_size 25m;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+
+    # Flarum's shipped rules (try_files → index.php, caching, protections)
+    include /var/www/rogersense-forum/.nginx.conf;
+
+    location ~ \.php$ {
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass unix:/run/php/php8.1-fpm-rogersense-forum.sock;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $document_root;
+    }
+}

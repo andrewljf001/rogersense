@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reset Password — Rogersense</title>
+  <link rel="icon" href="/favicon.svg?v=20260606" type="image/svg+xml"/>
+  <link rel="stylesheet" href="assets/style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo"><span class="nav-logo-name">Rogersense</span><span class="nav-logo-sub">System Solutions</span></a>
+    <div></div><div><a href="/login.html" class="btn btn-ghost">Sign in</a></div>
+  </div>
+</nav>
+<main style="min-height:calc(100vh - 60px);background:var(--color-bg-2);padding:40px 20px;">
+  <div class="auth-card">
+    <h2>Set a new password</h2>
+    <p class="subtitle">Choose a new password for your account.</p>
+    <div id="reset-form" style="display:flex;flex-direction:column;gap:12px;">
+      <div class="form-field"><label for="r-pw">New password</label><input type="password" id="r-pw" class="form-input" placeholder="At least 8 characters"/></div>
+      <div class="form-field"><label for="r-pw2">Confirm password</label><input type="password" id="r-pw2" class="form-input" placeholder="Repeat password"/></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;" id="r-submit">Update password</button>
+    </div>
+    <p id="r-msg" style="font-size:0.85rem;margin-top:12px;display:none;"></p>
+    <p class="auth-footer"><a href="/login.html">← Back to sign in</a></p>
+  </div>
+</main>
+<script src="assets/main.js?v=4"></script>
+<script>
+  const token = new URLSearchParams(location.search).get('token');
+  const msg = document.getElementById('r-msg');
+  function show(t, ok){ msg.textContent=t; msg.style.color = ok?'var(--color-text-success)':'var(--color-accent)'; msg.style.display='block'; }
+  if (!token) { document.getElementById('reset-form').style.display='none'; show('Invalid reset link. Please request a new one from the sign-in page.', false); }
+  document.getElementById('r-submit').addEventListener('click', async () => {
+    const pw = document.getElementById('r-pw').value, pw2 = document.getElementById('r-pw2').value;
+    if (pw.length < 8) return show('Password must be at least 8 characters.', false);
+    if (pw !== pw2) return show('Passwords do not match.', false);
+    const btn = document.getElementById('r-submit'); btn.disabled=true; btn.textContent='Updating…';
+    try {
+      const r = await apiFetch('/auth/reset-password', { method:'POST', body: JSON.stringify({ token, password: pw }) });
+      document.getElementById('reset-form').style.display='none';
+      show((r.message||'Password updated.') + ' Redirecting to sign in…', true);
+      setTimeout(()=>{ location.href='/login.html'; }, 2000);
+    } catch(e) { show(e.message, false); btn.disabled=false; btn.textContent='Update password'; }
+  });
+</script>
+</body>
+</html>
