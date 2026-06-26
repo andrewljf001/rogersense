@@ -1609,6 +1609,14 @@ app.get('/robots.txt', (_req, res) => {
   res.type('text/plain').send(`User-agent: *\nAllow: /\nSitemap: ${SITE_URL}/sitemap_index.xml\n`);
 });
 
+// IndexNow verification key for search-engine URL submission.
+const INDEXNOW_KEY = '1e325e19a7164300b03d840ff84bb628';
+app.get(`/${INDEXNOW_KEY}.txt`, (_req, res) => {
+  res.type('text/plain')
+    .set('Cache-Control', 'public, max-age=86400')
+    .send(INDEXNOW_KEY);
+});
+
 // ════════════════════════════════════════════════════════════
 // STATIC FRONTEND (explicit whitelist — never serve server.js/.env)
 // ════════════════════════════════════════════════════════════
