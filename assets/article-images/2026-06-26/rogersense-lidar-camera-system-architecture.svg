@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">LiDAR camera fusion system architecture diagram</title>
+  <desc id="desc">A technical diagram showing LiDAR and camera inputs feeding edge compute, firmware diagnostics, motion control, logging, and service review.</desc>
+  <defs>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#102932"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#0b1820" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#22d3ee"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="675" fill="#061a21"/>
+  <rect x="58" y="54" width="1084" height="567" rx="26" fill="url(#panel)" stroke="#25414a"/>
+  <text x="90" y="108" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="800" fill="#0b1820">LiDAR-camera fusion is a product subsystem</text>
+  <text x="90" y="146" font-family="Inter, Arial, sans-serif" font-size="18" fill="#38bdf8">The pilot has to validate the sensing chain, not only the model output.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="95" y="210" width="190" height="126" rx="18" fill="#0f172a" stroke="#1e5f68"/>
+    <circle cx="142" cy="270" r="26" fill="#12323a" stroke="#22d3ee" stroke-width="3"/>
+    <path d="M142 244 L142 296 M116 270 L168 270 M124 252 L160 288 M160 252 L124 288" stroke="#22d3ee" stroke-width="4" stroke-linecap="round"/>
+    <text x="190" y="260" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="800" fill="#0b1820">LiDAR</text>
+    <text x="190" y="290" font-family="Inter, Arial, sans-serif" font-size="15" fill="#38bdf8">geometry, range</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="95" y="382" width="190" height="126" rx="18" fill="#0f172a" stroke="#1e5f68"/>
+    <rect x="118" y="426" width="58" height="42" rx="10" fill="#12323a" stroke="#22d3ee" stroke-width="3"/>
+    <circle cx="147" cy="447" r="13" fill="#22d3ee"/>
+    <rect x="176" y="438" width="22" height="18" rx="4" fill="#22d3ee"/>
+    <text x="212" y="438" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="800" fill="#0b1820">Camera</text>
+    <text x="212" y="468" font-family="Inter, Arial, sans-serif" font-size="15" fill="#38bdf8">visual context</text>
+  </g>
+
+  <path d="M292 273 C360 273 368 274 430 274" fill="none" stroke="#22d3ee" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M292 445 C360 445 368 404 430 362" fill="none" stroke="#22d3ee" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="430" y="238" width="265" height="215" rx="20" fill="#0f172a" stroke="#25414a"/>
+    <text x="462" y="288" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="850" fill="#0b1820">Edge compute</text>
+    <text x="462" y="322" font-family="Inter, Arial, sans-serif" font-size="16" fill="#38bdf8">fusion, filtering, inference</text>
+    <rect x="462" y="352" width="82" height="54" rx="10" fill="#12323a" stroke="#22d3ee"/>
+    <rect x="563" y="352" width="82" height="54" rx="10" fill="#12323a" stroke="#22d3ee"/>
+    <text x="484" y="386" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="800" fill="#a3e635">sync</text>
+    <text x="582" y="386" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="800" fill="#a3e635">fuse</text>
+  </g>
+
+  <path d="M702 346 C753 346 774 346 822 346" fill="none" stroke="#22d3ee" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="822" y="178" width="268" height="104" rx="18" fill="#0f172a" stroke="#25414a"/>
+    <text x="850" y="222" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="800" fill="#0b1820">Firmware diagnostics</text>
+    <text x="850" y="250" font-family="Inter, Arial, sans-serif" font-size="15" fill="#38bdf8">sensor state, timing, faults</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="822" y="310" width="268" height="104" rx="18" fill="#0f172a" stroke="#25414a"/>
+    <text x="850" y="354" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="800" fill="#0b1820">Motion / control layer</text>
+    <text x="850" y="382" font-family="Inter, Arial, sans-serif" font-size="15" fill="#38bdf8">slow down, stop, fallback</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="822" y="442" width="268" height="104" rx="18" fill="#0f172a" stroke="#25414a"/>
+    <text x="850" y="486" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="800" fill="#0b1820">Logging and service</text>
+    <text x="850" y="514" font-family="Inter, Arial, sans-serif" font-size="15" fill="#38bdf8">events, calibration, evidence</text>
+  </g>
+
+  <path d="M695 318 C744 260 771 232 812 232" fill="none" stroke="#38bdf8" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M695 375 C747 398 774 494 812 494" fill="none" stroke="#38bdf8" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <text x="90" y="574" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" fill="#a3e635">Pilot question:</text>
+  <text x="220" y="574" font-family="Inter, Arial, sans-serif" font-size="18" fill="#cbd5e1">Can the whole sensing chain stay trustworthy after installation?</text>
+</svg>

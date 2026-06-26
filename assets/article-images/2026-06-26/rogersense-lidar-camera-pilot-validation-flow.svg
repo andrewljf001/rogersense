@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">LiDAR camera fusion pilot validation workflow</title>
+  <desc id="desc">A workflow diagram showing validation steps from environment notes to field of view, calibration, enclosure, thermal and data checks, degraded mode, and production testing.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#22d3ee"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0b1820" flood-opacity="0.11"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="675" fill="#061a21"/>
+  <rect x="58" y="54" width="1084" height="567" rx="26" fill="#0f172a" stroke="#25414a"/>
+  <text x="90" y="108" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="800" fill="#0b1820">Pilot validation should be a workflow</text>
+  <text x="90" y="146" font-family="Inter, Arial, sans-serif" font-size="18" fill="#38bdf8">Each step reduces a different deployment risk before the robot reaches the field.</text>
+
+  <g filter="url(#shadow)" font-family="Inter, Arial, sans-serif">
+    <rect x="100" y="222" width="165" height="112" rx="18" fill="#12323a" stroke="#1e5f68"/>
+    <text x="128" y="265" font-size="20" font-weight="850" fill="#a3e635">1. Site notes</text>
+    <text x="128" y="294" font-size="14" fill="#38bdf8">dust, glare, traffic</text>
+
+    <rect x="320" y="222" width="165" height="112" rx="18" fill="#12323a" stroke="#1e5f68"/>
+    <text x="348" y="265" font-size="20" font-weight="850" fill="#a3e635">2. FoV map</text>
+    <text x="348" y="294" font-size="14" fill="#38bdf8">overlap and blind zones</text>
+
+    <rect x="540" y="222" width="165" height="112" rx="18" fill="#12323a" stroke="#1e5f68"/>
+    <text x="568" y="265" font-size="20" font-weight="850" fill="#a3e635">3. Calibration</text>
+    <text x="568" y="294" font-size="14" fill="#38bdf8">store, verify, restore</text>
+
+    <rect x="760" y="222" width="165" height="112" rx="18" fill="#12323a" stroke="#1e5f68"/>
+    <text x="788" y="265" font-size="20" font-weight="850" fill="#a3e635">4. Enclosure</text>
+    <text x="788" y="294" font-size="14" fill="#38bdf8">window and service access</text>
+
+    <rect x="980" y="222" width="120" height="112" rx="18" fill="#12323a" stroke="#1e5f68"/>
+    <text x="1008" y="265" font-size="20" font-weight="850" fill="#a3e635">5. Heat</text>
+    <text x="1008" y="294" font-size="14" fill="#38bdf8">sustained load</text>
+  </g>
+
+  <path d="M270 278 L310 278" stroke="#22d3ee" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M490 278 L530 278" stroke="#22d3ee" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M710 278 L750 278" stroke="#22d3ee" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M930 278 L970 278" stroke="#22d3ee" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <path d="M1040 340 C1040 392 950 404 895 404" fill="none" stroke="#22d3ee" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)" font-family="Inter, Arial, sans-serif">
+    <rect x="710" y="390" width="185" height="112" rx="18" fill="#0b1820" stroke="#25414a"/>
+    <text x="738" y="433" font-size="20" font-weight="850" fill="#0b1820">6. Data timing</text>
+    <text x="738" y="462" font-size="14" fill="#38bdf8">bandwidth, logs, sync</text>
+
+    <rect x="445" y="390" width="205" height="112" rx="18" fill="#0b1820" stroke="#25414a"/>
+    <text x="473" y="433" font-size="20" font-weight="850" fill="#0b1820">7. Degraded mode</text>
+    <text x="473" y="462" font-size="14" fill="#38bdf8">slow, stop, request service</text>
+
+    <rect x="170" y="390" width="215" height="112" rx="18" fill="#0b1820" stroke="#25414a"/>
+    <text x="198" y="433" font-size="20" font-weight="850" fill="#0b1820">8. Production test</text>
+    <text x="198" y="462" font-size="14" fill="#38bdf8">repeatable unit checks</text>
+  </g>
+
+  <path d="M704 446 L660 446" stroke="#22d3ee" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M440 446 L395 446" stroke="#22d3ee" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <rect x="90" y="552" width="1020" height="42" rx="21" fill="#0b1820"/>
+  <text x="120" y="579" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="800" fill="#0f172a">Goal:</text>
+  <text x="176" y="579" font-family="Inter, Arial, sans-serif" font-size="17" fill="#cbd5e1">turn a working demo into a pilot that can be serviced, repeated, and trusted.</text>
+</svg>
