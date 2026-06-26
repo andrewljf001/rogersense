@@ -343,15 +343,19 @@
     try {
       const data = await CasesAPI.list();
       if (!data?.cases?.length) return;
-      document.getElementById('cases-preview').innerHTML = data.cases.slice(0,3).map(c => `
+      document.getElementById('cases-preview').innerHTML = data.cases.slice(0,3).map(c => {
+        const plain = (c.description || '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+        const excerpt = plain.length > 150 ? plain.slice(0, 150) + '…' : plain;
+        return `
         <div class="case-card">
           <div class="case-thumb">${c.cover_image ? `<img src="${c.cover_image}" alt="${c.title}" loading="lazy"/>` : `<div class="case-thumb-placeholder">No image</div>`}</div>
           <div class="case-body">
             <div class="case-tags">${(c.tags||[]).slice(0,3).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
-            <h3>${c.title}</h3><p>${c.description}</p>
+            <h3>${c.title}</h3><p>${excerpt}</p>
             <a href="case-detail.html?slug=${c.slug}" class="case-link">View case →</a>
           </div>
-        </div>`).join('');
+        </div>`;
+      }).join('');
     } catch(_) {}
   }
   loadCasesPreview();

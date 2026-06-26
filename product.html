@@ -34,7 +34,8 @@
     .p-meta{font-size:.82rem;color:var(--color-text-light);border-top:1px solid var(--color-border);padding-top:16px;margin-top:6px;}
     .p-meta a{color:#0d9488;}
     .wa-ask{font-size:.85rem;margin:6px 0 18px;}
-    .dl-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1.5px solid #0d9488;color:#0d9488;background:#0d94881a;border-radius:8px;font-weight:700;font-size:.85rem;}
+    .dl-btn{display:inline-flex;align-items:center;gap:7px;padding:11px 15px;border:1.5px solid #0d9488;color:#0d9488;background:#0d94881a;border-radius:8px;font-weight:800;font-size:.85rem;text-decoration:none;transition:background .16s,color .16s,box-shadow .16s,transform .16s;}
+    .dl-btn:hover{background:#0d9488;color:#fff;box-shadow:0 10px 22px rgba(13,148,136,.22);transform:translateY(-1px);}
     /* tabs */
     .tabs{margin-top:48px;border-top:1px solid var(--color-border);}
     .tabs-nav{display:flex;gap:8px;border-bottom:1px solid var(--color-border);}
@@ -250,7 +251,7 @@
           <div class="buy-row">
             <div class="qty"><button type="button" id="q-minus">−</button><input id="q-input" type="number" min="1" value="1"/><button type="button" id="q-plus">+</button></div>
             <button class="btn btn-primary btn-lg" id="buy-btn" ${out?'disabled':''}>${out?'Sold out':'Buy now →'}</button>
-            ${dl?`<a class="dl-btn" href="${esc(dl.url)}" target="_blank" rel="noopener"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</a>`:''}
+            ${dl?`<a class="dl-btn" href="${esc(dl.url)}" target="_blank" rel="noopener"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download PDF</a>`:''}
           </div>
           <p class="wa-ask" id="wa-ask" style="display:none;">Questions? <a id="wa-link" href="#" target="_blank" rel="noopener" style="font-weight:600;">Chat with us on WhatsApp →</a></p>
           <div class="p-meta">

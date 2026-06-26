@@ -136,21 +136,38 @@
   });
 
   function renderCard(c) {
+    const href = `case-detail.html?slug=${encodeURIComponent(c.slug)}`;
     return `
-      <div class="case-card">
+      <a href="${href}" class="case-card" aria-label="View case: ${esc(c.title)}">
         <div class="case-thumb">
           ${c.cover_image
-            ? `<img src="${c.cover_image}" alt="${c.title}" loading="lazy"/>`
+            ? `<img src="${c.cover_image}" alt="${esc(c.title)}" loading="lazy"/>`
             : `<div class="case-thumb-placeholder">No image yet</div>`}
         </div>
         <div class="case-body">
           <div class="case-tags">${(c.tags||[]).slice(0,4).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
-          <h3>${c.title}</h3>
-          <p>${c.description}</p>
-          <a href="case-detail.html?slug=${c.slug}" class="case-link">View case →</a>
+          <h3>${esc(c.title)}</h3>
+          <p>${esc(caseExcerpt(c.description))}</p>
+          <span class="case-link">View case →</span>
         </div>
-      </div>
+      </a>
     `;
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  }
+
+  function caseExcerpt(html) {
+    const firstPara = String(html || '').split('</p><p>')[0];
+    const plain = firstPara
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&minus;/g, '-')
+      .replace(/&amp;/g, '&')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return plain.length > 180 ? plain.slice(0, 177).trim() + '...' : plain;
   }
 
   // Placeholder data while API is not connected
