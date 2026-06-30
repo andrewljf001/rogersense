@@ -5,6 +5,8 @@
    ============================================================ */
 require('dotenv').config();
 
+const crypto = require('crypto');
+
 // Node 18+ has global fetch; fall back to node-fetch if absent.
 const fetchFn = global.fetch || require('node-fetch');
 
@@ -305,14 +307,13 @@ async function initDB() {
   const { rows } = await query(`SELECT COUNT(*) as cnt FROM users WHERE role = 'admin'`);
   if (!rows[0] || rows[0].cnt === 0) {
     const bcrypt = require('bcryptjs');
-    const { v4: uuidv4 } = require('uuid');
     const defaultPass  = process.env.DEFAULT_ADMIN_PASSWORD || 'rogersense2026';
     const defaultEmail = process.env.DEFAULT_ADMIN_EMAIL || 'admin@rogersense.com';
     const hash = await bcrypt.hash(defaultPass, 12);
     await query(
       `INSERT OR IGNORE INTO users (id, email, password_hash, name, role, email_verified)
        VALUES (?, ?, ?, ?, ?, 1)`,
-      [uuidv4(), defaultEmail, hash, 'rogersense Admin', 'admin']
+      [crypto.randomUUID(), defaultEmail, hash, 'rogersense Admin', 'admin']
     );
     console.log(`✅ Default admin created: ${defaultEmail} / ${defaultPass}  (change this immediately)`);
   }

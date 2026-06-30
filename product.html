@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title id="page-title">Product — Rogersense</title>
   <meta name="description" id="meta-desc" content="Rogersense store product."/>
-  <link rel="stylesheet" href="assets/style.css"/>
+  <link rel="stylesheet" href="/assets/style.css?v=20260701a"/>
   <style>
     .crumb{font-size:.8rem;color:var(--color-text-light);margin-bottom:20px;}
     .crumb a{color:var(--color-text-muted);} .crumb a:hover{color:var(--color-text);}
@@ -34,7 +34,8 @@
     .p-meta{font-size:.82rem;color:var(--color-text-light);border-top:1px solid var(--color-border);padding-top:16px;margin-top:6px;}
     .p-meta a{color:#0d9488;}
     .wa-ask{font-size:.85rem;margin:6px 0 18px;}
-    .dl-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1.5px solid #0d9488;color:#0d9488;background:#0d94881a;border-radius:8px;font-weight:700;font-size:.85rem;}
+    .dl-btn{display:inline-flex;align-items:center;gap:7px;padding:11px 15px;border:1.5px solid #0d9488;color:#0d9488;background:#0d94881a;border-radius:8px;font-weight:800;font-size:.85rem;text-decoration:none;transition:background .16s,color .16s,box-shadow .16s,transform .16s;}
+    .dl-btn:hover{background:#0d9488;color:#fff;box-shadow:0 10px 22px rgba(13,148,136,.22);transform:translateY(-1px);}
     /* tabs */
     .tabs{margin-top:48px;border-top:1px solid var(--color-border);}
     .tabs-nav{display:flex;gap:8px;border-bottom:1px solid var(--color-border);}
@@ -92,11 +93,11 @@
     <a href="/" class="nav-logo"><span class="nav-logo-name">Rogersense</span><span class="nav-logo-sub">System Solutions</span></a>
     <ul class="nav-links">
       <li><a href="/#how-it-works">How it works</a></li>
-      <li><a href="shop.html" class="active">Store</a></li>
-      <li><a href="cases.html">Cases</a></li>
-      <li><a href="blog.html">Blog</a></li>
-      <li><a href="about.html">About</a></li>
-      <li><a href="contact.html">Contact</a></li>
+      <li><a href="/shop" class="active">Store</a></li>
+      <li><a href="/cases">Cases</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/about">About</a></li>
+      <li><a href="/contact">Contact</a></li>
       <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
     </ul>
     <div class="nav-actions" id="nav-actions"></div>
@@ -107,14 +108,14 @@
   <div class="nav-drawer-overlay" id="drawer-overlay"></div>
   <div class="nav-drawer-panel">
     <button class="nav-drawer-close" id="drawer-close">✕</button>
-    <a href="/">Home</a><a href="/#how-it-works">How it works</a><a href="shop.html">Store</a><a href="cases.html">Cases</a><a href="blog.html">Blog</a><a href="about.html">About</a><a href="contact.html">Contact</a>
+    <a href="/">Home</a><a href="/#how-it-works">How it works</a><a href="/shop">Store</a><a href="/cases">Cases</a><a href="/blog">Blog</a><a href="/about">About</a><a href="/contact">Contact</a>
     <a href="https://forum.rogersense.com" target="_blank">Forum</a>
   </div>
 </div>
 
 <section class="section" style="padding-top:32px;">
   <div class="container">
-    <div class="crumb"><a href="/">Home</a> / <a href="shop.html">Store</a> / <span id="crumb-name">…</span></div>
+    <div class="crumb"><a href="/">Home</a> / <a href="/shop">Store</a> / <span id="crumb-name">…</span></div>
     <div id="pdp-root">
       <p style="text-align:center;color:var(--color-text-light);padding:60px 0;">Loading…</p>
     </div>
@@ -129,21 +130,21 @@
         <p class="footer-brand-desc">End-to-end product engineering.<br>Hardware · Firmware · Mechanical.</p>
       </div>
       <div class="footer-col"><h4>Explore</h4><ul>
-        <li><a href="shop.html">Store</a></li>
-        <li><a href="cases.html">Cases</a></li>
-        <li><a href="blog.html">Blog</a></li>
-        <li><a href="about.html">About</a></li>
+        <li><a href="/shop">Store</a></li>
+        <li><a href="/cases">Cases</a></li>
+        <li><a href="/blog">Blog</a></li>
+        <li><a href="/about">About</a></li>
       </ul></div>
       <div class="footer-col"><h4>Company</h4><ul>
-        <li><a href="contact.html">Contact</a></li>
-        <li><a href="quote.html">Get a Quote</a></li>
+        <li><a href="/contact">Contact</a></li>
+        <li><a href="/quote">Get a Quote</a></li>
         <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
       </ul></div>
       <div class="footer-col"><h4>Legal</h4><ul>
-        <li><a href="privacy.html">Privacy Policy</a></li><li><a href="terms.html">Terms of Service</a></li>
-        <li><a href="returns.html">Returns &amp; Refunds</a></li>
-        <li><a href="shipping.html">Shipping</a></li>
-        <li><a href="gdpr.html">Data Deletion</a></li>
+        <li><a href="/privacy">Privacy Policy</a></li><li><a href="/terms">Terms of Service</a></li>
+        <li><a href="/returns">Returns &amp; Refunds</a></li>
+        <li><a href="/shipping">Shipping</a></li>
+        <li><a href="/gdpr">Data Deletion</a></li>
       </ul></div>
     </div>
     <div class="footer-bottom">
@@ -193,11 +194,16 @@
     </div>
   </div>
 </div>
-<div class="lightbox" id="lightbox"><img id="lb-img" src="" alt=""/></div>
+<div class="lightbox" id="lightbox"><img id="lb-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt=""/></div>
 
-<script src="assets/main.js?v=4"></script>
+<script src="/assets/main.js?v=20260701a"></script>
 <script>
-  const slug = new URLSearchParams(location.search).get('slug');
+  function slugFromPath(prefix) {
+    const parts = location.pathname.split('/').filter(Boolean);
+    if (parts[0] === prefix && parts[1]) return safeDecode(parts[1]);
+    return new URLSearchParams(location.search).get('slug');
+  }
+  const slug = slugFromPath('products');
   const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const money = (v, cur='USD') => `${cur==='USD'?'$':''}${Number(v).toFixed(2)}${cur!=='USD'?' '+cur:''}`;
   let PRODUCT = null, WA = '';
@@ -212,7 +218,7 @@
   if (pp.get('payment') === 'success') showToast('Payment received — thank you!', 'success', 6000);
   if (pp.get('payment') === 'cancelled') showToast('Payment cancelled.', 'error', 4000);
 
-  const notFound = () => document.getElementById('pdp-root').innerHTML = '<p style="text-align:center;padding:60px 0;">Product not found. <a href="shop.html">Back to Store →</a></p>';
+  const notFound = () => document.getElementById('pdp-root').innerHTML = '<p style="text-align:center;padding:60px 0;">Product not found. <a href="/shop">Back to Store →</a></p>';
   async function load() {
     if (!slug) { notFound(); return; }
     let p;
@@ -230,7 +236,7 @@
     document.getElementById('page-title').textContent = p.name + ' — Rogersense';
     document.getElementById('meta-desc').setAttribute('content', p.summary || p.name);
     document.getElementById('crumb-name').textContent = p.name;
-    const imgs = (p.images && p.images.length) ? p.images : (p.cover_image ? [p.cover_image] : []);
+    const imgs = ((p.images && p.images.length) ? p.images : (p.cover_image ? [p.cover_image] : [])).filter(Boolean);
     const out = p.stock === 0;
     const avg = rv.average || p.rating_avg || 0, count = rv.count || 0;
     const dl = (p.downloads && p.downloads.length) ? p.downloads[0] : null;
@@ -238,7 +244,7 @@
     document.getElementById('pdp-root').innerHTML = `
       <div class="pdp">
         <div>
-          <div class="g-main"><img id="g-main-img" src="${esc(imgs[0]||'')}" alt="${esc(p.name)}"/></div>
+          <div class="g-main">${imgs[0] ? `<img id="g-main-img" src="${esc(imgs[0])}" alt="${esc(p.name)}"/>` : '<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--color-text-light);border:1px dashed var(--color-border);border-radius:var(--radius-md);">No product image</div>'}</div>
           ${imgs.length>1 ? `<div class="g-thumbs">${imgs.map((u,i)=>`<div class="g-thumb ${i===0?'active':''}" data-img="${esc(u)}"><img src="${esc(u)}" alt=""/></div>`).join('')}</div>`:''}
         </div>
         <div>
@@ -250,12 +256,12 @@
           <div class="buy-row">
             <div class="qty"><button type="button" id="q-minus">−</button><input id="q-input" type="number" min="1" value="1"/><button type="button" id="q-plus">+</button></div>
             <button class="btn btn-primary btn-lg" id="buy-btn" ${out?'disabled':''}>${out?'Sold out':'Buy now →'}</button>
-            ${dl?`<a class="dl-btn" href="${esc(dl.url)}" target="_blank" rel="noopener"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</a>`:''}
+            ${dl?`<a class="dl-btn" href="${esc(dl.url)}" target="_blank" rel="noopener"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download PDF</a>`:''}
           </div>
           <p class="wa-ask" id="wa-ask" style="display:none;">Questions? <a id="wa-link" href="#" target="_blank" rel="noopener" style="font-weight:600;">Chat with us on WhatsApp →</a></p>
           <div class="p-meta">
             ${p.category?`<div>Category: ${esc(p.category)}</div>`:''}
-            <div style="margin-top:6px;">Custom requirements? <a href="quote.html">Submit a brief →</a></div>
+            <div style="margin-top:6px;">Custom requirements? <a href="/quote">Submit a brief →</a></div>
           </div>
         </div>
       </div>
@@ -265,7 +271,7 @@
           <button class="active" data-tab="desc">Description</button>
           <button data-tab="reviews" id="reviews">Reviews (${count})</button>
         </div>
-        <div class="tab-panel active" id="panel-desc"><div class="prose">${p.description || '<p>'+esc(p.summary||'')+'</p>'}</div></div>
+        <div class="tab-panel active" id="panel-desc"><div class="prose">${cleanInternalLinks(p.description || '<p>'+esc(p.summary||'')+'</p>')}</div></div>
         <div class="tab-panel" id="panel-reviews">
           <div id="rv-list">${renderReviews(rv.reviews||[])}</div>
           <form class="rv-form" id="rv-form">
@@ -300,7 +306,8 @@
       document.getElementById('g-main-img').src = t.dataset.img;
       document.querySelectorAll('.g-thumb').forEach(x=>x.classList.remove('active')); t.classList.add('active');
     }));
-    document.getElementById('g-main-img').addEventListener('click', e => {
+    const mainImg = document.getElementById('g-main-img');
+    if (mainImg) mainImg.addEventListener('click', e => {
       document.getElementById('lb-img').src = e.target.src; document.getElementById('lightbox').classList.add('open');
     });
     document.getElementById('lightbox').addEventListener('click', () => document.getElementById('lightbox').classList.remove('open'));
@@ -374,7 +381,7 @@
   }
   async function captureAndFinish(ppId) {
     await apiFetch('/api/payment/capture-order', { method:'POST', body: JSON.stringify({ order_no: lastOrderNo, paypal_order_id: ppId }) });
-    location.href = '/track.html?order=' + encodeURIComponent(lastOrderNo);
+    location.href = '/track?order=' + encodeURIComponent(lastOrderNo);
   }
   async function initPayments() {
     if (paymentsInited) return;

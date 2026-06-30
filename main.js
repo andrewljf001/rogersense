@@ -20,14 +20,14 @@ const Auth = {
   logout() {
     this.removeToken();
     this.removeUser();
-    window.location.href = '/login.html';
+    window.location.href = '/login';
   }
 };
 
 /* ── Fetch wrapper ── */
 async function apiFetch(path, options = {}) {
   const token = Auth.getToken();
-  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json', ...options.headers };
   if (token) headers['Authorization'] = `Bearer ${token}`;
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
   if (res.status === 401) { Auth.logout(); return; }
@@ -97,19 +97,19 @@ const MessagesAPI = {
 const CasesAPI = {
   async list(category = '') {
     const q = category ? `?category=${category}` : '';
-    return apiFetch(`/cases${q}`);
+    return apiFetch(`/api/cases${q}`);
   },
   async get(slug) {
-    return apiFetch(`/cases/${slug}`);
+    return apiFetch(`/api/cases/${slug}`);
   },
   async create(payload) {
-    return apiFetch('/cases', { method: 'POST', body: JSON.stringify(payload) });
+    return apiFetch('/api/cases', { method: 'POST', body: JSON.stringify(payload) });
   },
   async update(id, payload) {
-    return apiFetch(`/cases/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+    return apiFetch(`/api/cases/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
   },
   async remove(id) {
-    return apiFetch(`/cases/${id}`, { method: 'DELETE' });
+    return apiFetch(`/api/cases/${id}`, { method: 'DELETE' });
   }
 };
 
@@ -130,6 +130,20 @@ const UploadAPI = {
     // `url` (publicUrl) is for rendering (e.g. case images); `key` is the
     // private storage reference (e.g. quote attachments).
     return { key, url: publicUrl || key, name: file.name, size: file.size };
+  },
+  async uploadAdminImage(file) {
+    const token = Auth.getToken();
+    const form = new FormData();
+    form.append('image', file);
+    const res = await fetch(`${API_BASE}/api/admin/upload/image`, {
+      method: 'POST',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      body: form,
+    });
+    if (res.status === 401) { Auth.logout(); return; }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || `Error ${res.status}`);
+    return { ...data, name: file.name, size: file.size };
   }
 };
 
@@ -141,7 +155,7 @@ function initNav() {
   if (user && Auth.isLoggedIn()) {
     const initials = user.name ? user.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase() : '?';
     actionsEl.innerHTML = `
-      <a href="/dashboard.html" class="nav-user" title="Dashboard">
+      <a href="/dashboard" class="nav-user" title="Dashboard">
         <div class="nav-avatar">${initials}</div>
         <span class="hidden sm-inline">${user.name || user.email}</span>
       </a>
@@ -149,8 +163,8 @@ function initNav() {
     `;
   } else {
     actionsEl.innerHTML = `
-      <a href="/login.html" class="btn btn-outline btn-sm">Sign in</a>
-      <a href="/quote.html" class="btn btn-primary btn-sm">Submit Brief →</a>
+      <a href="/login" class="btn btn-outline btn-sm">Sign in</a>
+      <a href="/quote" class="btn btn-primary btn-sm">Submit Brief →</a>
     `;
   }
 }
@@ -181,19 +195,19 @@ function showToast(message, type = 'success', duration = 3000) {
 /* ── Redirect if not logged in ── */
 function requireAuth() {
   if (!Auth.isLoggedIn()) {
-    window.location.href = `/login.html?redirect=${encodeURIComponent(location.pathname)}`;
+    window.location.href = `/login?redirect=${encodeURIComponent(location.pathname)}`;
   }
 }
 
 /* ── Redirect if not admin ── */
 function requireAdmin() {
   if (!Auth.isLoggedIn()) {
-    window.location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname);
+    window.location.href = '/login?redirect=' + encodeURIComponent(location.pathname);
     return;
   }
   const user = Auth.getUser();
   if (!user || user.role !== 'admin') {
-    window.location.href = '/dashboard.html';   // logged-in non-admins go to their dashboard
+    window.location.href = '/dashboard';   // logged-in non-admins go to their dashboard
   }
 }
 
@@ -208,6 +222,33 @@ function formatSize(bytes) {
 }
 function slugify(str) {
   return str.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+}
+function safeDecode(value) {
+  try { return decodeURIComponent(value); } catch { return String(value || ''); }
+}
+function cleanInternalLinks(html = '') {
+  const pages = {
+    shop: '/shop', cases: '/cases', blog: '/blog', about: '/about', quote: '/quote',
+    contact: '/contact', privacy: '/privacy', terms: '/terms', returns: '/returns',
+    shipping: '/shipping', gdpr: '/gdpr', login: '/login', dashboard: '/dashboard',
+    reset: '/reset', track: '/track', admin: '/admin'
+  };
+  let out = String(html);
+  out = out.replace(/https:\/\/rogersense\.com\/product\.html\?slug=([^"'&<>\s]+)/g, (_, slug) => `https://rogersense.com/products/${encodeURIComponent(safeDecode(slug))}`);
+  out = out.replace(/https:\/\/rogersense\.com\/case-detail\.html\?slug=([^"'&<>\s]+)/g, (_, slug) => `https://rogersense.com/cases/${encodeURIComponent(safeDecode(slug))}`);
+  out = out.replace(/https:\/\/rogersense\.com\/blog-post\.html\?slug=([^"'&<>\s]+)/g, (_, slug) => `https://rogersense.com/blog/${encodeURIComponent(safeDecode(slug))}`);
+  out = out.replace(/(["'=])\/?product\.html\?slug=([^"'&<>\s]+)/g, (_, q, slug) => `${q}/products/${encodeURIComponent(safeDecode(slug))}`);
+  out = out.replace(/(["'=])\/?case-detail\.html\?slug=([^"'&<>\s]+)/g, (_, q, slug) => `${q}/cases/${encodeURIComponent(safeDecode(slug))}`);
+  out = out.replace(/(["'=])\/?blog-post\.html\?slug=([^"'&<>\s]+)/g, (_, q, slug) => `${q}/blog/${encodeURIComponent(safeDecode(slug))}`);
+  out = out.replace(/(["'=])\/?cases\.html\?category=([^"'&<>\s]+)/g, (_, q, cat) => `${q}/cases/category/${encodeURIComponent(safeDecode(cat))}`);
+  out = out.replace(/(["'=])\/?shop\.html\?category=([^"'&<>\s]+)/g, (_, q, cat) => `${q}/shop/category/${encodeURIComponent(safeDecode(cat))}`);
+  out = out.replace(/(["'=])\/?shop\.html\?p=([^"'&<>\s]+)/g, (_, q, slug) => `${q}/products/${encodeURIComponent(safeDecode(slug))}`);
+  out = out.replace(/(["'=])\/?shop\?p=([^"'&<>\s]+)/g, (_, q, slug) => `${q}/products/${encodeURIComponent(safeDecode(slug))}`);
+  for (const [name, clean] of Object.entries(pages)) {
+    out = out.replace(new RegExp(`(["'=])/?${name}\\.html`, 'g'), `$1${clean}`);
+    out = out.replace(new RegExp(`https://rogersense\\.com/${name}\\.html`, 'g'), `https://rogersense.com${clean}`);
+  }
+  return out;
 }
 
 /* ── Status label helper ── */
@@ -228,7 +269,7 @@ function statusBadge(status) {
    Injected on every public page (not admin). Shows only when an admin has
    set `whatsapp_number` in Settings. Reads from /api/settings/public. */
 async function initWhatsApp() {
-  if (location.pathname.includes('admin.html')) return;
+  if (location.pathname === '/admin') return;
   if (document.getElementById('wa-float')) return;
   try {
     const cfg = await apiFetch('/api/settings/public');
@@ -300,13 +341,13 @@ function turnstileReset(el) {
 
 /* ── Cookie consent banner (GDPR) ── */
 function initCookieBanner() {
-  if (location.pathname.includes('admin.html') || location.pathname.includes('login.html')) return;
+  if (location.pathname === '/admin' || location.pathname === '/login') return;
   if (localStorage.getItem('cookie_consent')) return;
   const bar = document.createElement('div');
   bar.style.cssText = 'position:fixed;left:16px;right:16px;bottom:16px;z-index:940;max-width:720px;margin:0 auto;' +
     'background:#0f2231;color:#e6f6f2;border:1px solid #1b3a4b;border-radius:12px;padding:14px 18px;' +
     'display:flex;gap:14px;align-items:center;flex-wrap:wrap;box-shadow:0 12px 34px rgba(0,0,0,.45);';
-  bar.innerHTML = '<span style="flex:1;min-width:220px;font-size:.84rem;line-height:1.5;">We use cookies to run the site and improve your experience. See our <a href="privacy.html" style="color:#2dd4bf;font-weight:600;">Privacy Policy</a>.</span>' +
+  bar.innerHTML = '<span style="flex:1;min-width:220px;font-size:.84rem;line-height:1.5;">We use cookies to run the site and improve your experience. See our <a href="/privacy" style="color:#2dd4bf;font-weight:600;">Privacy Policy</a>.</span>' +
     '<button class="btn btn-primary btn-sm" data-ck="accepted">Accept</button>' +
     '<button class="btn btn-outline btn-sm" data-ck="rejected">Reject</button>';
   document.body.appendChild(bar);

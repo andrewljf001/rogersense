@@ -3,6 +3,13 @@ node_modules/
 .env.local
 CREDENTIALS.local.md
 *.secrets
+.secrets/
+.DS_Store
+._*
+__pycache__/
+*.pyc
+deploy/.tmp-*/
+server.vps.js
 uploads/
 logs/
 *.log

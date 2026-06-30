@@ -12,17 +12,17 @@ Customers can submit custom briefs for evaluation and buy in-stock tools/product
 ## Site Structure
 | Page | Purpose |
 |------|---------|
-| `index.html` | Homepage, services overview, cases preview, store/blog links |
-| `shop.html` / `product.html` | Fixed-price store, product detail, downloads, reviews, PayPal checkout |
-| `cases.html` / `case-detail.html` | Case showcase, photos and descriptions |
-| `blog.html` / `blog-post.html` | Blog list and SSR article pages |
-| `quote.html` | Submit a custom brief (requires login) |
-| `about.html` | About us |
-| `contact.html` | Contact form plus sales/engineering WhatsApp lines |
-| `track.html` | Public order tracking |
-| `login.html` / `reset.html` | Email/password auth and password reset |
-| `dashboard.html` | Client dashboard, briefs, messages, product orders |
-| `admin.html` | Admin panel for briefs, cases, products, orders, reviews, posts, settings |
+| `/` | Homepage, services overview, cases preview, store/blog links |
+| `/shop` / `/products/:slug` | Fixed-price store, product detail, downloads, reviews, PayPal checkout |
+| `/cases` / `/cases/:slug` | Case showcase, photos and descriptions |
+| `/blog` / `/blog/:slug` | Blog list and SSR article pages |
+| `/quote` | Submit a custom brief (requires login) |
+| `/about` | About us |
+| `/contact` | Contact form plus sales/engineering WhatsApp lines |
+| `/track` | Public order tracking |
+| `/login` / `/reset` | Email/password auth and password reset |
+| `/dashboard` | Client dashboard, briefs, messages, product orders |
+| `/admin` | Admin panel for briefs, cases, products, orders, reviews, posts, settings |
 | Legal pages | Privacy, terms, returns, shipping, GDPR deletion request |
 | Forum | Flarum on VPS at `forum.rogersense.com` (separate app, unified style) |
 
@@ -45,11 +45,28 @@ Browser → Cloudflare CDN/SSL → VPS (Nginx) → Node.js + Express → Cloudfl
 | Forum | Flarum (PHP + dedicated MySQL); SSO is deferred |
 
 ## Local development
+Requires Node.js 20.9+.
+
 ```bash
 npm install
 cp .env.example .env   # fill in CF D1/R2 tokens, JWT secrets
 node server.js         # serves frontend + API on http://localhost:PORT
 ```
+
+## Content publishing workbench
+Rogersense publishing must use the site's admin API; do not publish by hand-editing D1, copying server files, browser-only upload workarounds, or temporary scripts.
+
+```json
+{
+  "baseUrl": "https://rogersense.com",
+  "publishMode": "admin-posts-api",
+  "loginPath": "/auth/login",
+  "postsPath": "/api/admin/posts",
+  "imageUploadPath": "/api/admin/upload/image"
+}
+```
+
+Blog cover uploads use `POST /api/admin/upload/image` with an admin JWT and `multipart/form-data` field `image` or `file`. The server converts the upload to WebP, stores only the WebP object in R2 under `products/blog/`, and returns `/img?key=...` for public display.
 
 ## Deployment
 Deploy to the VPS app directory `/var/www/rogersense`, then restart PM2 process `rogersense`.

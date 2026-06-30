@@ -4,7 +4,8 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard — Rogersense</title>
-  <link rel="stylesheet" href="assets/style.css"/>
+  <meta name="robots" content="noindex, nofollow, noarchive"/>
+  <link rel="stylesheet" href="/assets/style.css?v=20260701a"/>
   <link rel="icon" href="/favicon.svg?v=20260606" type="image/svg+xml"/>
 </head>
 <body>
@@ -15,11 +16,11 @@
       <span class="nav-logo-sub">System Solutions</span>
     </a>
     <ul class="nav-links">
-      <li><a href="shop.html">Store</a></li>
-      <li><a href="cases.html">Cases</a></li>
-      <li><a href="blog.html">Blog</a></li>
-      <li><a href="contact.html">Contact</a></li>
-      <li><a href="quote.html">New Brief</a></li>
+      <li><a href="/shop">Store</a></li>
+      <li><a href="/cases">Cases</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/contact">Contact</a></li>
+      <li><a href="/quote">New Brief</a></li>
     </ul>
     <div class="nav-actions" id="nav-actions"></div>
   </div>
@@ -35,7 +36,7 @@
           <li><a href="#" class="active" data-view="quotes">📋 My Briefs</a></li>
           <li><a href="#" data-view="orders">🛒 My Orders</a></li>
           <li><a href="#" data-view="profile">👤 Profile</a></li>
-          <li><a href="quote.html">+ New Brief</a></li>
+          <li><a href="/quote">+ New Brief</a></li>
           <li><a href="#" onclick="Auth.logout()">Sign out</a></li>
         </ul>
       </aside>
@@ -47,13 +48,13 @@
         <div id="view-quotes">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
             <h2 style="font-size:1.3rem;">My Project Briefs</h2>
-            <a href="quote.html" class="btn btn-primary btn-sm">+ Submit New Brief</a>
+            <a href="/quote" class="btn btn-primary btn-sm">+ Submit New Brief</a>
           </div>
 
           <div id="quotes-loading" style="padding:40px;text-align:center;color:var(--color-text-light);">Loading…</div>
           <div id="quotes-empty" style="display:none;padding:60px 20px;text-align:center;">
             <p style="font-size:1rem;color:var(--color-text-muted);margin-bottom:20px;">No briefs submitted yet.</p>
-            <a href="quote.html" class="btn btn-primary">Submit Your First Brief →</a>
+            <a href="/quote" class="btn btn-primary">Submit Your First Brief →</a>
           </div>
 
           <div class="table-wrap" id="quotes-table" style="display:none;">
@@ -102,7 +103,7 @@
           <div id="orders-loading" style="padding:40px;text-align:center;color:var(--color-text-light);">Loading…</div>
           <div id="orders-empty" style="display:none;padding:50px 20px;text-align:center;">
             <p style="color:var(--color-text-muted);margin-bottom:18px;">No orders yet.</p>
-            <a href="shop.html" class="btn btn-primary">Browse the Store →</a>
+            <a href="/shop" class="btn btn-primary">Browse the Store →</a>
           </div>
           <div class="table-wrap" id="my-orders-table" style="display:none;">
             <table><thead><tr><th>Order</th><th>Product</th><th>Total</th><th>Status</th><th>Tracking</th><th>Date</th></tr></thead>
@@ -135,7 +136,7 @@
   </div>
 </main>
 
-<script src="assets/main.js?v=4"></script>
+<script src="/assets/main.js?v=20260701a"></script>
 <script>
   requireAuth();
 
@@ -180,7 +181,7 @@
           <td style="font-size:0.85rem;">${o.product_name} ×${o.qty}</td>
           <td style="font-size:0.85rem;">$${Number(o.total_paid||0).toFixed(2)}</td>
           <td>${ostat(o.status)}</td>
-          <td style="font-size:0.8rem;">${o.tracking_no ? o.tracking_no + (o.carrier?` (${o.carrier})`:'') + ` · <a href="track.html?order=${encodeURIComponent(o.order_no)}">track</a>` : '—'}</td>
+          <td style="font-size:0.8rem;">${o.tracking_no ? o.tracking_no + (o.carrier?` (${o.carrier})`:'') + ` · <a href="/track?order=${encodeURIComponent(o.order_no)}">track</a>` : '—'}</td>
           <td style="font-size:0.8rem;color:var(--color-text-muted);">${formatDate(o.created_at)}</td>
         </tr>`).join('');
     } catch(_) { document.getElementById('orders-loading').textContent = 'Could not load orders.'; }

@@ -14,10 +14,10 @@
 Home · How it works · Store · Cases · Blog · About · Contact · Forum. Footer = Explore / Company / Legal + Track Order + Terms. Pages: index, shop, product, cases, case-detail, blog, blog-post, about, contact, quote, track, login, dashboard, admin, privacy, returns, shipping, gdpr, terms, reset, 404 + favicon.
 
 ### 🛒 Store / e-commerce — payments LIVE
-- Product list + **PDP** (`product.html?slug=` — gallery/thumbs/lightbox, summary, Description+Reviews tabs, responsive). Store "Buy" → PDP.
+- Product list + **PDP** (`/products/` — gallery/thumbs/lightbox, summary, Description+Reviews tabs, responsive). Store "Buy" → PDP.
 - **Login required to order** (no guest checkout). Checkout has **inline register/sign-in** (with Turnstile) → continue to shipping → pay. Orders tie to the account.
 - **Wallet payments via PayPal SDK (LIVE):** **Apple Pay** (Safari/Apple) + **Google Pay** (Chrome/Android) + **PayPal** + **Card** — all through PayPal. Pay Later disabled. Endpoints: `/api/payment/create-order` + `/api/payment/capture-order`; redirect flow `/api/products/buy`+`/pay/product/return` kept as fallback. Apple Pay domain file at `/.well-known/apple-developer-merchantid-domain-association` (owner-provided). **Verified working end-to-end in sandbox; live creds valid.**
-- **Orders + tracking**: admin **Orders** tab (status + `tracking_no`/`carrier`, Save → emails buyer on ship). Customer **My Orders** in dashboard. Public **track.html** (order# + email). `/me/product-orders`, `/api/orders/track`.
+- **Orders + tracking**: admin **Orders** tab (status + `tracking_no`/`carrier`, Save → emails buyer on ship). Customer **My Orders** in dashboard. Public **/track** (order# + email). `/me/product-orders`, `/api/orders/track`.
 - **Reviews + moderation** (`product_reviews`): submit → pending → admin Reviews approve. Avg rating on card+PDP.
 - Per-product downloads (R2 `products/`). Live product: **LiDAR S1** ($4999, live stock managed in DB, 3 photos, spec PDF).
 
@@ -31,7 +31,7 @@ Home · How it works · Store · Cases · Blog · About · Contact · Forum. Foo
 
 ### 🔐 Security & accounts
 - **Turnstile** live on contact/review/register/gdpr/**login** (both keys configured; enforced only when both set; auto-renew + reset, no stuck-spin).
-- **Forgot/reset password**: `/auth/forgot-password` (emails link) → `reset.html` → `/auth/reset-password`. "Forgot password?" on login.
+- **Forgot/reset password**: `/auth/forgot-password` (emails link) → `/reset` → `/auth/reset-password`. "Forgot password?" on login.
 - GitHub OAuth is currently disabled in settings and hidden from the login/register UI until configured.
 - Admin login fixed → lands on `/admin`. Custom 404 page.
 - App sends baseline security headers, hides `X-Powered-By`, restricts CORS to known origins, and redirects `www.rogersense.com` to canonical `rogersense.com`.
@@ -64,12 +64,12 @@ Zoho SMTP configured & verified: smtppro.zoho.com:465 SSL, user/from admin@roger
 - [x] **Payment (PayPal)**: `getPayPalConfig/Token`; `/api/payment/config`; admin `POST /quotes/:id/send-payment`; server-side redirect flow `GET /pay` + `/pay/return` (quotes) — no extra frontend page needed
 - [x] **Store / products**: public `/api/products(+/:slug)`, admin products CRUD, `/api/admin/product-orders`, direct buy `POST /api/products/buy` → PayPal → `GET /pay/product/return` capture + stock decrement
 - [x] **Uploads**: `/upload/presign` + `/img` extended to `products/` folder (images + public datasheets/SDK)
-- [x] **shop.html** (NEW page): product grid, detail modal w/ downloads, checkout modal → PayPal redirect; Store added to its own nav/footer
+- [x] **/shop** (NEW page): product grid, detail modal w/ downloads, checkout modal → PayPal redirect; Store added to its own nav/footer
 - [x] **WhatsApp frontend**: floating wa.me button injected via `assets/main.js` on all public pages (reads `whatsapp_number`; hidden on admin; hidden if unset)
-- [x] **Backend tested**: `DB_DRIVER=sqlite` E2E green (admin login, product CRUD, public list, shop.html 200, buy guarded by PayPal config, stats)
+- [x] **Backend tested**: `DB_DRIVER=sqlite` E2E green (admin login, product CRUD, public list, /shop 200, buy guarded by PayPal config, stats)
 - [x] **admin.html UI** (back-office): Dashboard(stats) + GDPR pending list, Products management (image + datasheet/SDK upload), PayPal + WhatsApp + contact-address/hours setting fields, brief `send-payment` + quoted-price editor. Added `PATCH /quotes/:id` (admin price update).
 - [x] **Nav discoverability**: `Store` link added to all pages' nav + drawer (additive one-liner)
-- [x] **Deployed to VPS**: all files copied, initDB migrations ran on prod D1 (whatsapp/paypal settings + products/product_orders/addresses tables live), pm2 restarted, external smoke test green (rogersense.com + /shop.html = 200, Store link live)
+- [x] **Deployed to VPS**: all files copied, initDB migrations ran on prod D1 (whatsapp/paypal settings + products/product_orders/addresses tables live), pm2 restarted, external smoke test green (rogersense.com + /shop = 200, Store link live)
 
 ### Owner action items (external — not code)
 - [x] In admin → Settings → **Payments (PayPal)**: live client ID + secret + mode configured
@@ -81,11 +81,11 @@ Zoho SMTP configured & verified: smtppro.zoho.com:465 SSL, user/from admin@roger
 > Design note (owner, 2026-06-05): **Store products = direct buy/pay, no admin approval** (differs from pcbaforge). Custom briefs = submit-only, admin prices + sends pay link. Dev resources surfaced on product detail (downloads) + forum.
 
 ### Added after store (2026-06-05)
-- [x] **Blog**: `posts` table; public `/api/posts(+/:slug)`; admin posts CRUD; `blog.html` + `blog-post.html`; admin Blog view (HTML editor + cover upload); `/sitemap.xml` (static + cases + products + posts). Nav `Blog` added site-wide.
-- [x] **Contact**: `contact.html` (info cards + message form) + `POST /api/contact` (emails contact_email). Nav `Contact` added site-wide.
+- [x] **Blog**: `posts` table; public `/api/posts(+/:slug)`; admin posts CRUD; `/blog` + `/blog/:slug`; admin Blog view (HTML editor + cover upload); `/sitemap.xml` (static + cases + products + posts). Nav `Blog` added site-wide.
+- [x] **Contact**: `/contact` (info cards + message form) + `POST /api/contact` (emails contact_email). Nav `Contact` added site-wide.
 - [x] **Two contact lines** (mirrors pcbaforge): Sales `whatsapp_number` + Engineering `engineer_whatsapp` shown as separate cards.
 - [x] **Contact settings seeded in prod D1** to match pcbaforge (email swapped to admin@rogersense.com): address = Lihao Industrial Park, Longgang, Shenzhen; hours = Mon–Sat 8am–9pm CST; WhatsApp sales 8618665860773 / engineer 8613923800205.
-- All deployed + external smoke green (contact.html / blog.html / sitemap.xml = 200).
+- All deployed + external smoke green (/contact / /blog / sitemap.xml = 200).
 
 ---
 
@@ -123,10 +123,10 @@ All 8 pages built with the locked Deep Navy + Electric Teal design system.
 - [x] `assets/style.css` — global design system
 - [x] `assets/main.js` — Auth + apiFetch + AuthAPI/QuotesAPI/MessagesAPI/CasesAPI/UploadAPI
 - [x] `index.html` — homepage (hero, how-it-works, services, inline brief, cases preview, dev boards CTA)
-- [x] `about.html` / `login.html` / `dashboard.html`
-- [x] `quote.html` — 5-step brief form
-- [x] `cases.html` / `case-detail.html` — with placeholder fallback when API offline
-- [x] `admin.html` — quotes + cases management
+- [x] `/about` / `/login` / `/dashboard`
+- [x] `/quote` — 5-step brief form
+- [x] `/cases` / `/cases/:slug` — with placeholder fallback when API offline
+- [x] `/admin` — quotes + cases management
 - [x] Mobile responsive pass on `index.html`
 - [ ] Field-name alignment with real backend payloads (done in Phase 3)
 
@@ -156,7 +156,7 @@ All 8 pages built with the locked Deep Navy + Electric Teal design system.
 - [x] Verify login → dashboard flow end to end
 - [x] Verify brief submit (with file upload to R2) → appears in admin
 - [x] Verify admin status update + reply → reflected in client dashboard
-- [x] Verify cases CRUD in admin → renders on cases.html / case-detail.html
+- [x] Verify cases CRUD in admin → renders on `/cases` / `/cases/:slug`
 - [x] Keep visual style unchanged throughout
 
 ---

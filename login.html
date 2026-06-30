@@ -4,7 +4,8 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sign In — Rogersense</title>
-  <link rel="stylesheet" href="assets/style.css"/>
+  <meta name="robots" content="noindex, nofollow, noarchive"/>
+  <link rel="stylesheet" href="/assets/style.css?v=20260701a"/>
   <link rel="icon" href="/favicon.svg?v=20260606" type="image/svg+xml"/>
 </head>
 <body>
@@ -14,10 +15,29 @@
       <span class="nav-logo-name">Rogersense</span>
       <span class="nav-logo-sub">System Solutions</span>
     </a>
-    <div></div>
-    <div><a href="/" class="btn btn-ghost">← Back to home</a></div>
+    <ul class="nav-links">
+      <li><a href="/#how-it-works">How it works</a></li>
+      <li><a href="/shop">Store</a></li>
+      <li><a href="/cases">Cases</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/about">About</a></li>
+      <li><a href="/contact">Contact</a></li>
+      <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-actions"></div>
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
+<div class="nav-drawer" id="nav-drawer">
+  <div class="nav-drawer-overlay" id="drawer-overlay"></div>
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="drawer-close">✕</button>
+    <a href="/">Home</a><a href="/#how-it-works">How it works</a><a href="/shop">Store</a><a href="/cases">Cases</a><a href="/blog">Blog</a><a href="/about">About</a><a href="/contact">Contact</a>
+    <a href="https://forum.rogersense.com" target="_blank">Forum</a>
+  </div>
+</div>
 
 <main style="min-height:calc(100vh - 60px);background:var(--color-bg-2);padding:40px 20px;">
   <div class="auth-card" id="auth-card">
@@ -102,11 +122,43 @@
   </div>
 </main>
 
-<script src="assets/main.js?v=4"></script>
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <p class="footer-brand-name">Rogersense</p>
+        <p class="footer-brand-desc">End-to-end product engineering.<br>Hardware · Firmware · Mechanical.</p>
+      </div>
+      <div class="footer-col"><h4>Explore</h4><ul>
+        <li><a href="/shop">Store</a></li>
+        <li><a href="/cases">Cases</a></li>
+        <li><a href="/blog">Blog</a></li>
+        <li><a href="/about">About</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>Company</h4><ul>
+        <li><a href="/contact">Contact</a></li>
+        <li><a href="/quote">Get a Quote</a></li>
+        <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul>
+        <li><a href="/privacy">Privacy Policy</a></li><li><a href="/terms">Terms of Service</a></li>
+        <li><a href="/returns">Returns &amp; Refunds</a></li>
+        <li><a href="/shipping">Shipping</a></li>
+        <li><a href="/gdpr">Data Deletion</a></li>
+      </ul></div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Rogersense.</span>
+      <span>Custom engineering · In-stock hardware</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/main.js?v=20260701a"></script>
 <script>
   // Where to land after auth: explicit ?redirect wins, else admins → admin, clients → dashboard.
   const params = new URLSearchParams(location.search);
-  const destFor = () => params.get('redirect') || ((Auth.getUser() || {}).role === 'admin' ? '/admin' : '/dashboard.html');
+  const destFor = () => params.get('redirect') || ((Auth.getUser() || {}).role === 'admin' ? '/admin' : '/dashboard');
 
   // Handle GitHub OAuth redirect (?token=...), existing session, or ?error=
   (async () => {
@@ -206,7 +258,7 @@
       document.getElementById('register-submit').textContent = 'Creating account…';
       await AuthAPI.register(name, email, password, turnstileToken(regTs));
       const params = new URLSearchParams(location.search);
-      window.location.href = params.get('redirect') || '/dashboard.html';
+      window.location.href = params.get('redirect') || '/dashboard';
     } catch(e) {
       errEl.textContent = e.message || 'Registration failed. Please try again.';
       errEl.style.display = 'block';

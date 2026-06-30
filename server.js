@@ -9,21 +9,30 @@ const express = require('express');
 const cors    = require('cors');
 const path    = require('path');
 const crypto  = require('crypto');
+const os      = require('os');
+const fs      = require('fs');
+const fsp     = require('fs/promises');
 const jwt     = require('jsonwebtoken');
 const bcrypt  = require('bcryptjs');
-const { v4: uuidv4 } = require('uuid');
+const multer  = require('multer');
 const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const { execFile } = require('child_process');
+const { promisify } = require('util');
 
 const db = require('./database');
 const fetchFn = global.fetch || require('node-fetch');
+const execFileAsync = promisify(execFile);
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
 const SITE_URL   = (process.env.SITE_URL || `http://localhost:${PORT}`).replace(/\/$/, '');
+// SITE_URL is used for callbacks and emails. SEO URLs must always point at
+// the public canonical host so sitemap/canonical entries never redirect.
+const CANONICAL_SITE_URL = (process.env.CANONICAL_SITE_URL || 'https://rogersense.com').replace(/\/$/, '');
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-insecure-secret-change-me';
 const JWT_TTL    = '7d';
-const CANONICAL_HOST = new URL(SITE_URL).hostname;
+const CANONICAL_HOST = new URL(CANONICAL_SITE_URL).hostname;
 
 // ── AES-256-GCM for secrets at rest (SMTP pass / API keys) ───
 const ENC_KEY_RAW = process.env.SETTINGS_ENCRYPT_KEY || '';
@@ -58,6 +67,13 @@ const r2 = new S3Client({
   },
 });
 const R2_BUCKET     = process.env.R2_BUCKET || 'rogersense-files';
+function positiveNumber(value, fallback) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+const ADMIN_IMAGE_UPLOAD_MAX_BYTES = positiveNumber(process.env.ADMIN_IMAGE_UPLOAD_MAX_BYTES, 10 * 1024 * 1024);
+const WEBP_QUALITY = Math.max(1, Math.min(100, positiveNumber(process.env.WEBP_QUALITY, 82)));
+const ADMIN_BLOG_IMAGE_PREFIX = (process.env.ADMIN_BLOG_IMAGE_PREFIX || 'products/blog').replace(/^\/+|\/+$/g, '') || 'products/blog';
 
 /** Presigned PUT URL so the browser uploads directly to R2. */
 async function presignUpload(key, contentType) {
@@ -68,6 +84,55 @@ async function presignUpload(key, contentType) {
 async function presignDownload(key) {
   const cmd = new GetObjectCommand({ Bucket: R2_BUCKET, Key: key });
   return getSignedUrl(r2, cmd, { expiresIn: 3600 });
+}
+async function putR2Object(key, body, contentType, cacheControl = 'public, max-age=31536000, immutable') {
+  if (process.env.R2_UPLOAD_DRY_RUN === '1') return;
+  await r2.send(new PutObjectCommand({
+    Bucket: R2_BUCKET,
+    Key: key,
+    Body: body,
+    ContentType: contentType,
+    CacheControl: cacheControl,
+  }));
+}
+function safeAssetName(name) {
+  const base = path.basename(name || 'image').replace(/\.[^.]+$/, '');
+  return (base.toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'image');
+}
+function makeBlogImageKey(originalName) {
+  const d = new Date();
+  const yyyy = d.getUTCFullYear();
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const stamp = String(Date.now());
+  const rand = crypto.randomBytes(4).toString('hex');
+  return `${ADMIN_BLOG_IMAGE_PREFIX}/${yyyy}/${mm}/${stamp}_${rand}_${safeAssetName(originalName)}.webp`;
+}
+async function convertImageToWebp(file) {
+  try {
+    const sharp = require('sharp');
+    return await sharp(file.buffer, { failOn: 'none' })
+      .rotate()
+      .webp({ quality: WEBP_QUALITY, effort: 4 })
+      .toBuffer();
+  } catch (sharpErr) {
+    const dir = await fsp.mkdtemp(path.join(os.tmpdir(), 'rogersense-webp-'));
+    const input = path.join(dir, 'input');
+    const output = path.join(dir, 'output.webp');
+    try {
+      await fsp.writeFile(input, file.buffer);
+      await execFileAsync(process.env.CWEBP_BIN || 'cwebp', ['-quiet', '-q', String(WEBP_QUALITY), input, '-o', output], {
+        timeout: 30000,
+        maxBuffer: 1024 * 1024,
+      });
+      return await fsp.readFile(output);
+    } catch (cwebpErr) {
+      const err = new Error('Image WebP conversion failed. Install the sharp dependency or set CWEBP_BIN to a working cwebp binary.');
+      err.cause = cwebpErr || sharpErr;
+      throw err;
+    } finally {
+      await fsp.rm(dir, { recursive: true, force: true }).catch(() => {});
+    }
+  }
 }
 
 // ── Mail (SMTP or Resend, config from settings table) ───────
@@ -181,6 +246,104 @@ function genQuoteNo() {
   return 'RS' + ymd + Math.random().toString(36).slice(2, 7).toUpperCase();
 }
 const jp = (v, dflt) => { try { return JSON.parse(v); } catch { return dflt; } };
+const escHtml = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+const stripHtml = s => String(s ?? '').replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+const truncate = (s, n = 155) => {
+  const text = stripHtml(s);
+  return text.length > n ? text.slice(0, n - 1).trimEnd() + '…' : text;
+};
+const CLEAN_PAGE_PATHS = {
+  index: '/',
+  products: '/shop',
+  shop: '/shop',
+  cases: '/cases',
+  quote: '/quote',
+  about: '/about',
+  login: '/login',
+  dashboard: '/dashboard',
+  admin: '/admin',
+  blog: '/blog',
+  contact: '/contact',
+  privacy: '/privacy',
+  returns: '/returns',
+  shipping: '/shipping',
+  gdpr: '/gdpr',
+  terms: '/terms',
+  reset: '/reset',
+  track: '/track',
+};
+function pagePath(name) {
+  return CLEAN_PAGE_PATHS[name] || `/${name}`;
+}
+function productPath(slug) {
+  return `/products/${encodeURIComponent(slug)}`;
+}
+function casePath(slug) {
+  return `/cases/${encodeURIComponent(slug)}`;
+}
+function blogPath(slug) {
+  return `/blog/${encodeURIComponent(slug)}`;
+}
+function safeDecode(value) {
+  try { return decodeURIComponent(value); } catch { return String(value || ''); }
+}
+function cleanLegacyPath(value) {
+  let out = String(value || '');
+  out = out.replace(/\/product\.html\?slug=([^&#]+)/g, (_, slug) => productPath(safeDecode(slug)));
+  out = out.replace(/\/case-detail\.html\?slug=([^&#]+)/g, (_, slug) => casePath(safeDecode(slug)));
+  out = out.replace(/\/blog-post\.html\?slug=([^&#]+)/g, (_, slug) => blogPath(safeDecode(slug)));
+  out = out.replace(/\/cases\.html\?category=([^&#]+)/g, (_, cat) => `/cases/category/${encodeURIComponent(safeDecode(cat))}`);
+  out = out.replace(/\/shop\.html\?category=([^&#]+)/g, (_, cat) => `/shop/category/${encodeURIComponent(safeDecode(cat))}`);
+  out = out.replace(/\/shop\.html\?p=([^&#]+)/g, (_, slug) => productPath(safeDecode(slug)));
+  out = out.replace(/\/shop\?p=([^&#]+)/g, (_, slug) => productPath(safeDecode(slug)));
+  for (const [name, clean] of Object.entries(CLEAN_PAGE_PATHS)) {
+    out = out.replace(new RegExp(`/${name}\\.html`, 'g'), clean);
+  }
+  return out;
+}
+function cleanInternalHrefValue(value) {
+  const raw = String(value || '').trim();
+  const origin = raw.match(/^https?:\/\/(?:www\.)?rogersense\.com/i)?.[0] || '';
+  const local = origin ? raw.slice(origin.length) : raw;
+  const match = local.match(/^\/(?:products|cases|blog)\/[A-Za-z0-9._~%-]+(?:\/[A-Za-z0-9._~%-]+)*/);
+  if (!match) return '';
+  const cleanPath = match[0].replace(/%(?:22|27|3c|3e).*/i, '');
+  return origin ? `${CANONICAL_SITE_URL}${cleanPath}` : cleanPath;
+}
+function cleanInternalHrefAttr(match, prefix, quote, href) {
+  const cleanHref = cleanInternalHrefValue(href);
+  return cleanHref ? `${prefix}${quote}${cleanHref}${quote}` : match;
+}
+function cleanInternalLinks(html) {
+  return cleanLegacyPath(html)
+    .replace(/(["'=])product\.html\?slug=([^"'&<>\s]+)/g, (_, q, slug) => `${q}${productPath(safeDecode(slug))}`)
+    .replace(/(["'=])case-detail\.html\?slug=([^"'&<>\s]+)/g, (_, q, slug) => `${q}${casePath(safeDecode(slug))}`)
+    .replace(/(["'=])blog-post\.html\?slug=([^"'&<>\s]+)/g, (_, q, slug) => `${q}${blogPath(safeDecode(slug))}`)
+    .replace(/(["'=])cases\.html\?category=([^"'&<>\s]+)/g, (_, q, cat) => `${q}/cases/category/${encodeURIComponent(safeDecode(cat))}`)
+    .replace(/(["'=])shop\.html\?category=([^"'&<>\s]+)/g, (_, q, cat) => `${q}/shop/category/${encodeURIComponent(safeDecode(cat))}`)
+    .replace(/(["'=])\/?shop\.html\?p=([^"'&<>\s]+)/g, (_, q, slug) => `${q}${productPath(safeDecode(slug))}`)
+    .replace(/(["'=])\/?shop\?p=([^"'&<>\s]+)/g, (_, q, slug) => `${q}${productPath(safeDecode(slug))}`)
+    .replace(/((?:src|href)\s*=\s*["'])assets\//gi, '$1/assets/')
+    .replace(/(href\s*=\s*)(["'])([^"<>]*?)\2/gi, cleanInternalHrefAttr)
+    .replace(/\s+on[a-z][\w:-]*\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+}
+function appendRemainingQuery(req, pathname, omit = []) {
+  const params = new URLSearchParams();
+  const omitted = new Set(omit);
+  for (const [key, value] of Object.entries(req.query || {})) {
+    if (omitted.has(key)) continue;
+    const values = Array.isArray(value) ? value : [value];
+    for (const v of values) {
+      if (v === undefined) continue;
+      params.append(key, key === 'redirect' ? cleanLegacyPath(v) : String(v));
+    }
+  }
+  const qs = params.toString();
+  return qs ? `${pathname}?${qs}` : pathname;
+}
+function redirectLegacy(req, res, pathname, omit = []) {
+  return res.redirect(301, appendRemainingQuery(req, pathname, omit));
+}
 
 function publicUser(u) {
   return { id: u.id, name: u.name, email: u.email, company: u.company || '', role: u.role || 'client' };
@@ -192,11 +355,16 @@ function shapeQuote(q) {
     files: jp(q.files, []),
   };
 }
+function cleanImageList(value) {
+  return (Array.isArray(value) ? value : []).map(v => String(v || '').trim()).filter(Boolean);
+}
 function shapeCase(c) {
   return {
     ...c,
+    description: cleanInternalLinks(c.description || ''),
     tags: jp(c.tags, []),
-    images: jp(c.images, []),
+    cover_image: String(c.cover_image || '').trim(),
+    images: cleanImageList(jp(c.images, [])),
     published: !!c.published,
   };
 }
@@ -257,6 +425,31 @@ app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use('/api', (req, res, nxt) => { res.set('Cache-Control', 'no-store'); nxt(); });
 
+const adminImageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: ADMIN_IMAGE_UPLOAD_MAX_BYTES },
+  fileFilter(_req, file, cb) {
+    if (!file.mimetype || !file.mimetype.startsWith('image/')) {
+      const err = new multer.MulterError('LIMIT_UNEXPECTED_FILE', file.fieldname);
+      err.message = 'Only image/* uploads are allowed';
+      return cb(err);
+    }
+    cb(null, true);
+  },
+}).fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'file', maxCount: 1 },
+]);
+function handleAdminImageUpload(req, res, next) {
+  adminImageUpload(req, res, err => {
+    if (!err) return next();
+    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ message: `Image is too large. Max size is ${Math.round(ADMIN_IMAGE_UPLOAD_MAX_BYTES / 1024 / 1024)}MB.` });
+    }
+    return res.status(400).json({ message: err.message || 'Invalid image upload' });
+  });
+}
+
 // ════════════════════════════════════════════════════════════
 // AUTH
 // ════════════════════════════════════════════════════════════
@@ -268,7 +461,7 @@ app.post('/auth/register', async (req, res) => {
     if (password.length < 8) return res.status(400).json({ message: 'Password must be at least 8 characters' });
     const exists = await db.query(`SELECT id FROM users WHERE email = ?`, [email.toLowerCase()]);
     if (exists.rows.length) return res.status(409).json({ message: 'Email already registered' });
-    const id = uuidv4();
+    const id = crypto.randomUUID();
     const hash = await bcrypt.hash(password, 12);
     await db.query(
       `INSERT INTO users (id, email, password_hash, name, role) VALUES (?, ?, ?, ?, 'client')`,
@@ -315,7 +508,7 @@ app.post('/auth/forgot-password', async (req, res) => {
       const brand = (await getSetting('company_name')) || 'rogersense';
       sendMail({ to: email, subject: `[${brand}] Reset your password`,
         html: `<p>Hi ${u.name || ''},</p><p>Click below to set a new password (valid for 1 hour):</p>` +
-              `<p><a href="${SITE_URL}/reset.html?token=${token}" style="background:#0d9488;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600;">Reset password</a></p>` +
+              `<p><a href="${SITE_URL}/reset?token=${token}" style="background:#0d9488;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600;">Reset password</a></p>` +
               `<p>If you didn't request this, you can ignore this email.</p>` });
     }
     res.json({ ok: true, message: 'If that email is registered, a reset link has been sent.' });
@@ -341,7 +534,7 @@ app.post('/auth/reset-password', async (req, res) => {
 // GitHub OAuth (manual web flow) — inert until env configured.
 app.get('/auth/github', (req, res) => {
   const clientId = process.env.GITHUB_CLIENT_ID;
-  if (!clientId) return res.redirect('/login.html?error=github_not_configured');
+  if (!clientId) return res.redirect('/login?error=github_not_configured');
   const redirectUri = `${SITE_URL}/auth/github/callback`;
   const url = `https://github.com/login/oauth/authorize?client_id=${clientId}` +
               `&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email`;
@@ -352,14 +545,14 @@ app.get('/auth/github/callback', async (req, res) => {
     const { code } = req.query;
     const clientId = process.env.GITHUB_CLIENT_ID;
     const clientSecret = process.env.GITHUB_CLIENT_SECRET;
-    if (!code || !clientId || !clientSecret) return res.redirect('/login.html?error=github_failed');
+    if (!code || !clientId || !clientSecret) return res.redirect('/login?error=github_failed');
     const tokRes = await fetchFn('https://github.com/login/oauth/access_token', {
       method: 'POST',
       headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify({ client_id: clientId, client_secret: clientSecret, code }),
     });
     const tok = await tokRes.json();
-    if (!tok.access_token) return res.redirect('/login.html?error=github_failed');
+    if (!tok.access_token) return res.redirect('/login?error=github_failed');
     const ghHeaders = { 'Authorization': `Bearer ${tok.access_token}`, 'User-Agent': 'rogersense', 'Accept': 'application/json' };
     const ghUser = await (await fetchFn('https://api.github.com/user', { headers: ghHeaders })).json();
     let email = ghUser.email;
@@ -371,7 +564,7 @@ app.get('/auth/github/callback', async (req, res) => {
     let { rows } = await db.query(`SELECT * FROM users WHERE github_id = ? OR email = ?`, [String(ghUser.id), email]);
     let u = rows[0];
     if (!u) {
-      const id = uuidv4();
+      const id = crypto.randomUUID();
       await db.query(
         `INSERT INTO users (id, email, name, company, role, github_id, email_verified) VALUES (?, ?, ?, '', 'client', ?, 1)`,
         [id, email, ghUser.name || ghUser.login || 'GitHub User', String(ghUser.id)]
@@ -381,8 +574,8 @@ app.get('/auth/github/callback', async (req, res) => {
       await db.query(`UPDATE users SET github_id = ? WHERE id = ?`, [String(ghUser.id), u.id]);
     }
     // Hand the token to the frontend via the login page (consumed in Phase 3).
-    res.redirect(`/login.html?token=${encodeURIComponent(signToken(u))}`);
-  } catch (e) { res.redirect('/login.html?error=github_failed'); }
+    res.redirect(`/login?token=${encodeURIComponent(signToken(u))}`);
+  } catch (e) { res.redirect('/login?error=github_failed'); }
 });
 
 // ════════════════════════════════════════════════════════════
@@ -406,7 +599,7 @@ app.post('/quotes', auth, async (req, res) => {
     const { disciplines = [], deliverable = 'unsure', description = '', files = [], name = '', email = '', company = '' } = req.body;
     if (!Array.isArray(disciplines) || !disciplines.length) return res.status(400).json({ message: 'Select at least one discipline' });
     if (!description.trim()) return res.status(400).json({ message: 'Description required' });
-    const id = uuidv4();
+    const id = crypto.randomUUID();
     const quote_no = genQuoteNo();
     await db.query(
       `INSERT INTO quotes (id, quote_no, user_id, disciplines, deliverable, description, files, status, name, email, company)
@@ -493,7 +686,7 @@ app.post('/quotes/:id/messages', auth, async (req, res) => {
     if (!(await canAccessQuote(req, req.params.id))) return res.status(403).json({ message: 'Forbidden' });
     const { content, attachments = [] } = req.body;
     if (!content || !content.trim()) return res.status(400).json({ message: 'Empty message' });
-    const id = uuidv4();
+    const id = crypto.randomUUID();
     const role = req.user.role === 'admin' ? 'admin' : 'client';
     await db.query(
       `INSERT INTO messages (id, quote_id, author_id, role, content, attachments) VALUES (?, ?, ?, ?, ?, ?)`,
@@ -508,10 +701,16 @@ app.post('/quotes/:id/messages', auth, async (req, res) => {
 // CASES
 // ════════════════════════════════════════════════════════════
 // Public list (published) — admin (valid token) sees all incl. drafts.
-app.get('/cases', softAuth, async (req, res) => {
+app.get('/api/cases', softAuth, async (req, res) => {
   try {
     const isAdmin = req.user?.role === 'admin';
     const category = req.query.category;
+    if (!isAdmin) {
+      res.set('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400');
+      const ckey = 'cases:' + (category || 'all');
+      const cached = mcGet(ckey);
+      if (cached) return res.json(cached);
+    }
     let sql = `SELECT * FROM cases`;
     const params = [];
     const where = [];
@@ -520,30 +719,34 @@ app.get('/cases', softAuth, async (req, res) => {
     if (where.length) sql += ` WHERE ` + where.join(' AND ');
     sql += ` ORDER BY created_at DESC`;
     const { rows } = await db.query(sql, params);
-    res.json({ cases: rows.map(shapeCase) });
+    const out = { cases: rows.map(shapeCase) };
+    if (!isAdmin) mcSet('cases:' + (category || 'all'), out, 60000);
+    res.json(out);
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
-app.get('/cases/:slug', async (req, res) => {
+app.get('/api/cases/:slug', async (req, res) => {
   try {
     const { rows } = await db.query(`SELECT * FROM cases WHERE slug = ?`, [req.params.slug]);
     if (!rows[0]) return res.status(404).json({ message: 'Not found' });
+    res.set('Cache-Control', 'public, max-age=300, s-maxage=900, stale-while-revalidate=86400');
     res.json({ case: shapeCase(rows[0]) });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
-app.post('/cases', auth, adminOnly, async (req, res) => {
+app.post('/api/cases', auth, adminOnly, async (req, res) => {
   try {
     const { title, slug, category = '', tags = [], description = '', cover_image = '', images = [], published = false } = req.body;
     if (!title || !slug) return res.status(400).json({ message: 'Title and slug required' });
-    const id = uuidv4();
+    const id = crypto.randomUUID();
     await db.query(
       `INSERT INTO cases (id, slug, title, category, tags, description, cover_image, images, published)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [id, slug, title, category, JSON.stringify(tags), description, cover_image, JSON.stringify(images), published ? 1 : 0]
     );
+    mcClear('cases:');
     res.json({ ok: true, case: { id, slug } });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
-app.patch('/cases/:id', auth, adminOnly, async (req, res) => {
+app.patch('/api/cases/:id', auth, adminOnly, async (req, res) => {
   try {
     const f = req.body;
     const sets = [], params = [];
@@ -556,10 +759,11 @@ app.patch('/cases/:id', auth, adminOnly, async (req, res) => {
     sets.push(`updated_at = datetime('now')`);
     params.push(req.params.id);
     await db.query(`UPDATE cases SET ${sets.join(', ')} WHERE id = ?`, params);
+    mcClear('cases:');
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
-app.delete('/cases/:id', auth, adminOnly, async (req, res) => {
+app.delete('/api/cases/:id', auth, adminOnly, async (req, res) => {
   try {
     await db.query(`DELETE FROM cases WHERE id = ?`, [req.params.id]);
     res.json({ ok: true });
@@ -584,6 +788,34 @@ app.post('/upload/presign', auth, async (req, res) => {
     const publicUrl = PUBLIC_FOLDERS.includes(safeFolder) ? `/img?key=${encodeURIComponent(key)}` : null;
     res.json({ url, key, publicUrl });
   } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// Admin image upload for content publishing: receive image/file multipart,
+// convert server-side to WebP, store only the WebP object in R2, and expose it
+// through the existing public /img?key=... route.
+app.post('/api/admin/upload/image', auth, adminOnly, handleAdminImageUpload, async (req, res) => {
+  try {
+    const file = req.files?.image?.[0] || req.files?.file?.[0];
+    if (!file) return res.status(400).json({ message: 'image or file field is required' });
+    if (!file.mimetype || !file.mimetype.startsWith('image/')) {
+      return res.status(400).json({ message: 'Only image/* uploads are allowed' });
+    }
+    const webp = await convertImageToWebp(file);
+    const key = makeBlogImageKey(file.originalname);
+    await putR2Object(key, webp, 'image/webp');
+    const url = `/img?key=${encodeURIComponent(key)}`;
+    res.json({
+      ok: true,
+      url,
+      imageUrl: url,
+      cover_url: url,
+      key,
+      contentType: 'image/webp',
+    });
+  } catch (e) {
+    console.error('[ADMIN IMAGE UPLOAD ERROR]', e.message);
+    res.status(500).json({ message: e.message });
+  }
 });
 
 // Public asset redirect — serves ONLY case images and product assets
@@ -769,7 +1001,7 @@ app.post('/api/admin/customers/:id/reset-password', auth, adminOnly, async (req,
       html: `<p>Hi ${rows[0].name || ''},</p>` +
             `<p>An administrator reset your password. Your temporary password is:</p>` +
             `<p style="font-size:1.2rem;font-weight:bold;font-family:monospace">${temp}</p>` +
-            `<p>Sign in at <a href="${SITE_URL}/login.html">${SITE_URL}/login.html</a> and change it from your profile.</p>`,
+            `<p>Sign in at <a href="${SITE_URL}/login">${SITE_URL}/login</a> and change it from your profile.</p>`,
     });
     res.json({ ok: true, temp_password: temp, email: rows[0].email });
   } catch (e) { res.status(500).json({ message: e.message }); }
@@ -829,7 +1061,7 @@ app.post('/api/admin/admins', auth, adminOnly, async (req, res) => {
     const hash = await bcrypt.hash(password, 12);
     await db.query(
       `INSERT INTO users (id, email, password_hash, name, role, email_verified) VALUES (?, ?, ?, ?, 'admin', 1)`,
-      [uuidv4(), email.toLowerCase(), hash, name || 'Admin']
+      [crypto.randomUUID(), email.toLowerCase(), hash, name || 'Admin']
     );
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ message: e.message }); }
@@ -923,7 +1155,7 @@ app.post('/me/addresses', auth, async (req, res) => {
   try {
     const { label, recipient, phone, address_line, city, country, is_default } = req.body;
     if (is_default) await db.query(`UPDATE addresses SET is_default = 0 WHERE user_id = ?`, [req.user.id]);
-    const id = uuidv4();
+    const id = crypto.randomUUID();
     await db.query(
       `INSERT INTO addresses (id, user_id, label, recipient, phone, address_line, city, country, is_default)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -1001,7 +1233,7 @@ app.get('/pay', async (req, res) => {
     const { rows } = await db.query(`SELECT * FROM quotes WHERE quote_no = ?`, [quoteNo]);
     const q = rows[0];
     if (!q) return res.status(404).send('Brief not found');
-    if (q.status === 'paid' || q.status === 'completed') return res.redirect('/dashboard.html?payment=already');
+    if (q.status === 'paid' || q.status === 'completed') return res.redirect('/dashboard?payment=already');
     if (!q.quoted_price) return res.status(400).send('No quoted price set for this brief');
     const total = parseFloat(q.quoted_price) + parseFloat(q.shipping_fee || 0);
     const brand = (await getSetting('company_name')) || 'rogersense';
@@ -1019,7 +1251,7 @@ app.get('/pay', async (req, res) => {
         application_context: {
           brand_name: brand, landing_page: 'BILLING', user_action: 'PAY_NOW',
           return_url: `${SITE_URL}/pay/return?quote=${encodeURIComponent(q.quote_no)}`,
-          cancel_url: `${SITE_URL}/dashboard.html?payment=cancelled`,
+          cancel_url: `${SITE_URL}/dashboard?payment=cancelled`,
         },
       }),
     });
@@ -1040,7 +1272,7 @@ app.get('/pay/return', async (req, res) => {
     const { rows } = await db.query(`SELECT * FROM quotes WHERE quote_no = ?`, [quoteNo]);
     const q = rows[0];
     if (!q) return res.status(404).send('Brief not found');
-    if (q.status === 'paid' || q.status === 'completed') return res.redirect('/dashboard.html?payment=success');
+    if (q.status === 'paid' || q.status === 'completed') return res.redirect('/dashboard?payment=success');
     if (q.payment_intent && paypalOrderId && q.payment_intent !== paypalOrderId) {
       console.error('[SECURITY] payment_intent mismatch', q.quote_no);
       return res.status(400).send('Invalid payment token');
@@ -1058,7 +1290,7 @@ app.get('/pay/return', async (req, res) => {
     const adminEmail = await getSetting('contact_email');
     if (adminEmail) sendMail({ to: adminEmail, subject: `[${brand}] 💰 Payment received — ${q.quote_no}`, html: `<p>Brief <b>${q.quote_no}</b> paid: USD $${amountPaid.toFixed(2)}.</p>` });
     if (q.email) sendMail({ to: q.email, subject: `[${brand}] Payment confirmed — ${q.quote_no}`, html: `<p>Thank you! We received your payment of <b>USD $${amountPaid.toFixed(2)}</b> for ${q.quote_no}.</p>` });
-    res.redirect(302, '/dashboard.html?payment=success');
+    res.redirect(302, '/dashboard?payment=success');
   } catch (e) { res.status(500).send('Payment capture error: ' + e.message); }
 });
 
@@ -1066,7 +1298,7 @@ app.get('/pay/return', async (req, res) => {
 // PRODUCTS (dev boards & tools — fixed price, direct purchase)
 // ════════════════════════════════════════════════════════════
 function shapeProduct(p) {
-  return { ...p, images: jp(p.images, []), downloads: jp(p.downloads, []), price: Number(p.price),
+  return { ...p, description: cleanInternalLinks(p.description || ''), cover_image: String(p.cover_image || '').trim(), images: cleanImageList(jp(p.images, [])), downloads: jp(p.downloads, []), price: Number(p.price),
     rating_avg: p.rating_avg != null ? Number(p.rating_avg) : 0, rating_count: Number(p.rating_count || 0) };
 }
 const RATING_COLS = `(SELECT ROUND(AVG(rating),1) FROM product_reviews r WHERE r.product_id = p.id AND r.status = 'approved') AS rating_avg,
@@ -1075,7 +1307,7 @@ const RATING_COLS = `(SELECT ROUND(AVG(rating),1) FROM product_reviews r WHERE r
 app.get('/api/products', async (req, res) => {
   try {
     const category = req.query.category;
-    res.set('Cache-Control', 'public, max-age=30');
+    res.set('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400');
     const ckey = 'products:' + (category || 'all');
     const cached = mcGet(ckey);
     if (cached) return res.json(cached);
@@ -1094,6 +1326,7 @@ app.get('/api/products/:slug', async (req, res) => {
   try {
     const { rows } = await db.query(`SELECT p.*, ${RATING_COLS} FROM products p WHERE p.slug = ?`, [req.params.slug]);
     if (!rows[0] || rows[0].status !== 'active') return res.status(404).json({ message: 'Not found' });
+    res.set('Cache-Control', 'public, max-age=300, s-maxage=900, stale-while-revalidate=86400');
     res.json({ product: shapeProduct(rows[0]) });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
@@ -1123,7 +1356,7 @@ app.post('/api/products/:slug/reviews', async (req, res) => {
     if (!p) return res.status(404).json({ message: 'Product not found' });
     await db.query(
       `INSERT INTO product_reviews (id, product_id, author_name, email, rating, comment, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')`,
-      [uuidv4(), p.id, author_name.trim().slice(0, 60), (email || '').trim().slice(0, 120), r, comment.trim().slice(0, 2000)]
+      [crypto.randomUUID(), p.id, author_name.trim().slice(0, 60), (email || '').trim().slice(0, 120), r, comment.trim().slice(0, 2000)]
     );
     res.json({ ok: true, message: 'Thanks! Your review will appear once it has been approved.' });
   } catch (e) { res.status(500).json({ message: e.message }); }
@@ -1167,7 +1400,7 @@ app.post('/api/admin/products', auth, adminOnly, async (req, res) => {
     if (!slug || !name) return res.status(400).json({ message: 'slug and name required' });
     const exists = await db.query(`SELECT id FROM products WHERE slug = ?`, [slug]);
     if (exists.rows.length) return res.status(409).json({ message: 'Slug already in use' });
-    const id = uuidv4();
+    const id = crypto.randomUUID();
     await db.query(
       `INSERT INTO products (id, slug, name, category, price, currency, stock, summary, description, cover_image, images, downloads, status, sort_order)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -1237,7 +1470,7 @@ app.put('/api/admin/product-orders/:id', auth, adminOnly, async (req, res) => {
       sendMail({ to: o.buyer_email, subject: `[${brand}] Your order ${o.order_no} has shipped`,
         html: `<p>Good news — your order <b>${o.order_no}</b> (${o.product_name}) is on its way.</p>` +
               (tn ? `<p><b>Tracking:</b> ${tn}${(carrier||o.carrier)?` (${carrier||o.carrier})`:''}</p>` : '') +
-              `<p>Track it any time at <a href="${SITE_URL}/track.html?order=${encodeURIComponent(o.order_no)}">${SITE_URL}/track.html</a>.</p>` });
+              `<p>Track it any time at <a href="${SITE_URL}/track?order=${encodeURIComponent(o.order_no)}">${SITE_URL}/track</a>.</p>` });
     }
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ message: e.message }); }
@@ -1278,7 +1511,7 @@ async function createProductPurchase(req, { redirect }) {
   if (!p) { const e = new Error('Product not available'); e.status = 404; throw e; }
   if (p.stock > 0 && n > p.stock) { const e = new Error(`Only ${p.stock} in stock`); e.status = 400; throw e; }
   const total = (Number(p.price) || 0) * n;
-  const orderId = uuidv4();
+  const orderId = crypto.randomUUID();
   const orderNo = 'RP' + new Date().toISOString().slice(2, 10).replace(/-/g, '') + Math.random().toString(36).slice(2, 6).toUpperCase();
   await db.query(
     `INSERT INTO product_orders (id, order_no, product_id, product_name, user_id, buyer_email, buyer_name, qty, unit_price,
@@ -1290,7 +1523,7 @@ async function createProductPurchase(req, { redirect }) {
   const brand = (await getSetting('company_name')) || 'rogersense';
   const { token: ppToken, base } = await getPayPalToken();
   const appCtx = { brand_name: brand, landing_page: 'BILLING', user_action: 'PAY_NOW' };
-  if (redirect) { appCtx.return_url = `${SITE_URL}/pay/product/return?order=${encodeURIComponent(orderNo)}`; appCtx.cancel_url = `${SITE_URL}/shop.html?payment=cancelled`; }
+  if (redirect) { appCtx.return_url = `${SITE_URL}/pay/product/return?order=${encodeURIComponent(orderNo)}`; appCtx.cancel_url = `${SITE_URL}/shop?payment=cancelled`; }
   const ppRes = await fetchFn(`${base}/v2/checkout/orders`, {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + ppToken, 'Content-Type': 'application/json' },
@@ -1378,7 +1611,7 @@ app.get('/pay/product/return', async (req, res) => {
     const o = rows[0];
     if (!o) return res.status(404).send('Order not found');
     if (o.status === 'paid' || o.status === 'completed' || o.status === 'shipped')
-      return res.redirect('/shop.html?payment=success');
+      return res.redirect('/shop?payment=success');
     if (o.payment_intent && paypalOrderId && o.payment_intent !== paypalOrderId) {
       console.error('[SECURITY] product payment_intent mismatch', o.order_no);
       return res.status(400).send('Invalid payment token');
@@ -1397,37 +1630,122 @@ app.get('/pay/product/return', async (req, res) => {
     const adminEmail = await getSetting('contact_email');
     if (adminEmail) sendMail({ to: adminEmail, subject: `[${brand}] 🛒 New order — ${o.order_no}`, html: `<p>Order <b>${o.order_no}</b>: ${o.product_name} ×${o.qty} — USD $${amountPaid.toFixed(2)} paid by ${o.buyer_email}.</p><p>Ship to: ${o.ship_recipient}, ${o.ship_address}, ${o.ship_city}, ${o.ship_country} (${o.ship_phone})</p>` });
     if (o.buyer_email) sendMail({ to: o.buyer_email, subject: `[${brand}] Order confirmed — ${o.order_no}`, html: `<p>Thank you! Your order <b>${o.order_no}</b> (${o.product_name} ×${o.qty}) is confirmed — USD $${amountPaid.toFixed(2)} paid. We'll ship it shortly.</p>` });
-    res.redirect(302, '/shop.html?payment=success&order=' + encodeURIComponent(o.order_no));
+    res.redirect(302, '/shop?payment=success&order=' + encodeURIComponent(o.order_no));
   } catch (e) { res.status(500).send('Payment capture error: ' + e.message); }
 });
 
 // ════════════════════════════════════════════════════════════
 // BLOG POSTS
 // ════════════════════════════════════════════════════════════
-function shapePost(p) { return { ...p, tags: jp(p.tags, []) }; }
+function shapePost(p) { return { ...p, content: cleanInternalLinks(p.content || ''), tags: jp(p.tags, []) }; }
+function firstDefined(...values) {
+  return values.find(v => v !== undefined);
+}
+function normalizedString(value) {
+  return value === undefined ? undefined : String(value ?? '').trim();
+}
+function normalizeTagsInput(tags) {
+  if (tags === undefined) return undefined;
+  if (Array.isArray(tags)) return tags.map(t => String(t).trim()).filter(Boolean);
+  if (typeof tags === 'string') {
+    const s = tags.trim();
+    if (!s) return [];
+    if (s.startsWith('[')) {
+      const parsed = jp(s, null);
+      if (Array.isArray(parsed)) return parsed.map(t => String(t).trim()).filter(Boolean);
+    }
+    return s.split(',').map(t => t.trim()).filter(Boolean);
+  }
+  return [];
+}
+function normalizePostBody(body = {}) {
+  return {
+    title: normalizedString(firstDefined(body.title, body.seoTitle)),
+    slug: normalizedString(body.slug),
+    excerpt: normalizedString(firstDefined(body.excerpt, body.metaDescription, body.seoDescription)),
+    content: firstDefined(body.contentHtml, body.content),
+    cover_url: normalizedString(firstDefined(body.cover_url, body.coverUrl, body.imageUrl)),
+    tags: normalizeTagsInput(body.tags),
+    status: normalizedString(body.status),
+    author: normalizedString(body.author),
+  };
+}
+function postPublicUrl(slug) {
+  return `${CANONICAL_SITE_URL}${blogPath(slug)}`;
+}
+function postApiResponse(action, id, slug) {
+  const url = postPublicUrl(slug);
+  return { ok: true, action, id, slug, url, articleUrl: url };
+}
+const PUBLIC_POSTS_CACHE_MS = positiveNumber(process.env.PUBLIC_POSTS_CACHE_MS, 5 * 60 * 1000);
+const PUBLIC_POST_DETAIL_CACHE_MS = positiveNumber(process.env.PUBLIC_POST_DETAIL_CACHE_MS, 10 * 60 * 1000);
+const PUBLIC_POST_BROWSER_CACHE_SECONDS = Math.max(1, Math.min(300, Math.floor(positiveNumber(process.env.PUBLIC_POST_BROWSER_CACHE_SECONDS, 60))));
+function parsePositiveInt(value, fallback, max) {
+  const n = Number.parseInt(value, 10);
+  const out = Number.isFinite(n) && n > 0 ? n : fallback;
+  return max ? Math.min(out, max) : out;
+}
+function postListCacheKey(tag, page, limit) {
+  return `posts:list:${String(tag || '').trim().toLowerCase()}:${page}:${limit}`;
+}
+async function getPublishedPostList({ tag = '', page = 1, limit = 12 } = {}) {
+  const pageNum = parsePositiveInt(page, 1, 1000);
+  const limitNum = parsePositiveInt(limit, 12, 50);
+  const tagValue = String(tag || '').trim();
+  const ckey = postListCacheKey(tagValue, pageNum, limitNum);
+  const cached = mcGet(ckey);
+  if (cached) return cached;
+
+  const offset = (pageNum - 1) * limitNum;
+  let where = `WHERE status = 'published'`;
+  const params = [];
+  if (tagValue) { where += ` AND tags LIKE ?`; params.push('%' + tagValue + '%'); }
+  const { rows } = await db.query(
+    `SELECT id, slug, title, excerpt, cover_url, tags, author, views, published_at, created_at
+     FROM posts ${where} ORDER BY published_at DESC LIMIT ? OFFSET ?`,
+    [...params, limitNum, offset]
+  );
+  const countRows = (await db.query(`SELECT COUNT(*) as total FROM posts ${where}`, params)).rows;
+  const out = { posts: rows.map(shapePost), total: Number(countRows[0]?.total || 0) };
+  mcSet(ckey, out, PUBLIC_POSTS_CACHE_MS);
+  return out;
+}
+async function getPublishedPostRow(slug) {
+  const cleanSlug = String(slug || '').trim();
+  if (!cleanSlug) return null;
+  const ckey = `posts:detail:${cleanSlug}`;
+  const cached = mcGet(ckey);
+  if (cached) return cached;
+  const { rows } = await db.query(`SELECT * FROM posts WHERE slug = ? AND status = 'published'`, [cleanSlug]);
+  const post = rows[0] || null;
+  if (post) mcSet(ckey, post, PUBLIC_POST_DETAIL_CACHE_MS);
+  return post;
+}
+function clearPostPublicCache() {
+  mcClear('posts:');
+}
+function notePostView(slug) {
+  db.query(`UPDATE posts SET views = views + 1 WHERE slug = ?`, [slug]).catch(() => {});
+}
+function warmPublicPostCache() {
+  getPublishedPostList({ page: 1, limit: 12 })
+    .catch(err => console.warn('[CACHE] post warmup skipped:', err.message));
+}
 // Public: list published posts (paginated, optional ?tag=).
 app.get('/api/posts', async (req, res) => {
   try {
-    const { tag, page = 1, limit = 12 } = req.query;
-    const offset = (Number(page) - 1) * Number(limit);
-    let where = `WHERE status = 'published'`; const params = [];
-    if (tag) { where += ` AND tags LIKE ?`; params.push('%' + tag + '%'); }
-    const { rows } = await db.query(
-      `SELECT id, slug, title, excerpt, cover_url, tags, author, views, published_at, created_at
-       FROM posts ${where} ORDER BY published_at DESC LIMIT ? OFFSET ?`,
-      [...params, Number(limit), offset]
-    );
-    const countRows = (await db.query(`SELECT COUNT(*) as total FROM posts ${where}`, params)).rows;
-    res.json({ posts: rows.map(shapePost), total: Number(countRows[0]?.total || 0) });
+    res.set('Cache-Control', `public, max-age=${PUBLIC_POST_BROWSER_CACHE_SECONDS}`);
+    res.json(await getPublishedPostList(req.query));
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 // Public: single published post by slug (increments views).
 app.get('/api/posts/:slug', async (req, res) => {
   try {
-    const { rows } = await db.query(`SELECT * FROM posts WHERE slug = ? AND status = 'published'`, [req.params.slug]);
-    if (!rows[0]) return res.status(404).json({ message: 'Post not found' });
-    await db.query(`UPDATE posts SET views = views + 1 WHERE slug = ?`, [req.params.slug]);
-    res.json({ post: shapePost(rows[0]) });
+    res.set('Cache-Control', `public, max-age=${PUBLIC_POST_BROWSER_CACHE_SECONDS}`);
+    const post = await getPublishedPostRow(req.params.slug);
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+    notePostView(req.params.slug);
+    res.json({ post: shapePost(post) });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
@@ -1452,44 +1770,79 @@ app.get('/api/admin/posts/:id', auth, adminOnly, async (req, res) => {
 });
 app.post('/api/admin/posts', auth, adminOnly, async (req, res) => {
   try {
-    const { title, slug, excerpt, content, cover_url, tags, status, author } = req.body;
-    if (!title || !slug) return res.status(400).json({ message: 'title and slug required' });
-    const exists = await db.query(`SELECT id FROM posts WHERE slug = ?`, [slug]);
-    if (exists.rows.length) return res.status(409).json({ message: 'Slug already exists' });
-    const id = uuidv4();
+    const f = normalizePostBody(req.body);
+    if (!f.title || !f.slug) return res.status(400).json({ message: 'title and slug required' });
+    const existing = (await db.query(`SELECT * FROM posts WHERE slug = ?`, [f.slug])).rows[0];
+    if (existing) {
+      const nextStatus = f.status || existing.status || 'draft';
+      const published_at = nextStatus === 'published' ? (existing.published_at || new Date().toISOString()) : existing.published_at;
+      await db.query(
+        `UPDATE posts SET title = ?, excerpt = ?, content = ?, cover_url = ?, tags = ?,
+         status = ?, author = ?, published_at = ?, updated_at = datetime('now') WHERE id = ?`,
+        [
+          f.title,
+          f.excerpt ?? existing.excerpt ?? '',
+          f.content === undefined ? (existing.content ?? '') : String(f.content ?? ''),
+          f.cover_url === undefined ? (existing.cover_url ?? '') : f.cover_url,
+          f.tags === undefined ? (existing.tags || '[]') : JSON.stringify(f.tags),
+          nextStatus,
+          f.author || existing.author || 'Rogersense Team',
+          published_at,
+          existing.id,
+        ]
+      );
+      clearPostPublicCache();
+      return res.json(postApiResponse('updated', existing.id, f.slug));
+    }
+    const id = crypto.randomUUID();
+    const status = f.status || 'draft';
     const published_at = status === 'published' ? new Date().toISOString() : null;
     await db.query(
       `INSERT INTO posts (id, slug, title, excerpt, content, cover_url, tags, status, author, published_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, slug, title, excerpt || '', content || '', cover_url || '',
-       JSON.stringify(tags || []), status || 'draft', author || 'Rogersense Team', published_at]
+      [id, f.slug, f.title, f.excerpt || '', f.content === undefined ? '' : String(f.content ?? ''), f.cover_url || '',
+       JSON.stringify(f.tags || []), status, f.author || 'Rogersense Team', published_at]
     );
-    res.json({ ok: true, id });
+    clearPostPublicCache();
+    res.json(postApiResponse('created', id, f.slug));
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 app.put('/api/admin/posts/:id', auth, adminOnly, async (req, res) => {
   try {
-    const { title, slug, excerpt, content, cover_url, tags, status, author } = req.body;
-    if (slug) {
-      const dup = await db.query(`SELECT id FROM posts WHERE slug = ? AND id != ?`, [slug, req.params.id]);
+    const f = normalizePostBody(req.body);
+    const cur = (await db.query(`SELECT * FROM posts WHERE id = ?`, [req.params.id])).rows[0];
+    if (!cur) return res.status(404).json({ message: 'Post not found' });
+    if (f.slug && f.slug !== cur.slug) {
+      const dup = await db.query(`SELECT id FROM posts WHERE slug = ? AND id != ?`, [f.slug, req.params.id]);
       if (dup.rows.length) return res.status(409).json({ message: 'Slug already exists' });
     }
-    const cur = (await db.query(`SELECT status, published_at FROM posts WHERE id = ?`, [req.params.id])).rows[0];
-    if (!cur) return res.status(404).json({ message: 'Post not found' });
-    const published_at = (status === 'published' && !cur.published_at) ? new Date().toISOString() : cur.published_at;
+    const nextStatus = f.status || cur.status || 'draft';
+    const published_at = (nextStatus === 'published' && !cur.published_at) ? new Date().toISOString() : cur.published_at;
+    const nextSlug = f.slug || cur.slug;
     await db.query(
-      `UPDATE posts SET title = COALESCE(?, title), slug = COALESCE(?, slug), excerpt = COALESCE(?, excerpt),
-       content = COALESCE(?, content), cover_url = COALESCE(?, cover_url), tags = COALESCE(?, tags),
-       status = COALESCE(?, status), author = COALESCE(?, author), published_at = ?, updated_at = datetime('now') WHERE id = ?`,
-      [title ?? null, slug ?? null, excerpt ?? null, content ?? null, cover_url ?? null,
-       tags ? JSON.stringify(tags) : null, status ?? null, author ?? null, published_at, req.params.id]
+      `UPDATE posts SET title = ?, slug = ?, excerpt = ?, content = ?, cover_url = ?, tags = ?,
+       status = ?, author = ?, published_at = ?, updated_at = datetime('now') WHERE id = ?`,
+      [
+        f.title || cur.title,
+        nextSlug,
+        f.excerpt === undefined ? (cur.excerpt ?? '') : f.excerpt,
+        f.content === undefined ? (cur.content ?? '') : String(f.content ?? ''),
+        f.cover_url === undefined ? (cur.cover_url ?? '') : f.cover_url,
+        f.tags === undefined ? (cur.tags || '[]') : JSON.stringify(f.tags),
+        nextStatus,
+        f.author || cur.author || 'Rogersense Team',
+        published_at,
+        req.params.id,
+      ]
     );
-    res.json({ ok: true });
+    clearPostPublicCache();
+    res.json(postApiResponse('updated', req.params.id, nextSlug));
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 app.delete('/api/admin/posts/:id', auth, adminOnly, async (req, res) => {
   try {
     await db.query(`DELETE FROM posts WHERE id = ?`, [req.params.id]);
+    clearPostPublicCache();
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
@@ -1505,22 +1858,28 @@ function xmlEscape(value) {
 
 const SITEMAP_STATIC_PATHS = [
   '/',
-  '/shop.html',
-  '/cases.html',
-  '/blog.html',
-  '/about.html',
-  '/quote.html',
-  '/contact.html',
-  '/track.html',
-  '/privacy.html',
-  '/returns.html',
-  '/shipping.html',
-  '/gdpr.html',
-  '/terms.html',
+  '/shop',
+  '/cases',
+  '/blog',
+  '/about',
+  '/quote',
+  '/contact',
+  '/track',
+  '/privacy',
+  '/returns',
+  '/shipping',
+  '/gdpr',
+  '/terms',
 ];
 
 function sitemapUrl(pathname) {
-  return xmlEscape(`${SITE_URL}${pathname}`);
+  return xmlEscape(`${CANONICAL_SITE_URL}${pathname}`);
+}
+
+const CLEAN_URL_SITEMAP_LASTMOD = '2026-06-29';
+
+function sitemapEntry(pathname, lastmod = CLEAN_URL_SITEMAP_LASTMOD) {
+  return `<url><loc>${sitemapUrl(pathname)}</loc><lastmod>${xmlEscape(lastmod)}</lastmod></url>`;
 }
 
 // SEO: sitemap of static pages, published cases, products and posts.
@@ -1532,10 +1891,10 @@ app.get('/sitemap.xml', async (_req, res) => {
       db.query(`SELECT slug, updated_at FROM posts WHERE status = 'published'`),
     ]);
     const entries = [
-      ...SITEMAP_STATIC_PATHS.map(u => `<url><loc>${sitemapUrl(u)}</loc></url>`),
-      ...cases.rows.map(c => `<url><loc>${sitemapUrl(`/case-detail.html?slug=${encodeURIComponent(c.slug)}`)}</loc></url>`),
-      ...products.rows.map(p => `<url><loc>${sitemapUrl(`/product.html?slug=${encodeURIComponent(p.slug)}`)}</loc></url>`),
-      ...posts.rows.map(p => `<url><loc>${sitemapUrl(`/blog-post.html?slug=${encodeURIComponent(p.slug)}`)}</loc></url>`),
+      ...SITEMAP_STATIC_PATHS.map(u => sitemapEntry(u)),
+      ...cases.rows.map(c => sitemapEntry(casePath(c.slug))),
+      ...products.rows.map(p => sitemapEntry(productPath(p.slug))),
+      ...posts.rows.map(p => sitemapEntry(blogPath(p.slug), CLEAN_URL_SITEMAP_LASTMOD)),
     ];
     res.set('Content-Type', 'application/xml');
     res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries.join('\n')}\n</urlset>`);
@@ -1545,26 +1904,366 @@ app.get('/sitemap.xml', async (_req, res) => {
 // SEO: sitemap index for crawlers that request the index entrypoint.
 app.get('/sitemap_index.xml', (_req, res) => {
   res.set('Content-Type', 'application/xml');
-  res.send('<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n<sitemap><loc>' + sitemapUrl('/sitemap.xml') + '</loc></sitemap>\n</sitemapindex>');
+  res.send('<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n<sitemap><loc>' + sitemapUrl('/sitemap.xml') + '</loc><lastmod>' + CLEAN_URL_SITEMAP_LASTMOD + '</lastmod></sitemap>\n</sitemapindex>');
 });
 
-// SEO: server-render blog-post.html (inject title/meta/OG/JSON-LD + article
-// body so crawlers get full content without executing JS).
-app.get('/blog-post.html', async (req, res, next) => {
+function absolutePublicUrl(url) {
+  if (!url) return '';
+  return /^https?:\/\//i.test(url) ? url : CANONICAL_SITE_URL + (url.startsWith('/') ? url : `/${url}`);
+}
+function richTextHtml(value, fallback = '') {
+  const text = String(value || fallback || '');
+  if (!text) return '';
+  let html = /<[^>]+>/.test(text) ? text : `<p>${escHtml(text)}</p>`;
+  if (!/^\s*</.test(html)) html = `<p>${html}`;
+  return cleanInternalLinks(html);
+}
+function injectSeoHead(html, { title, description, canonical, image, type = 'website', ld }) {
+  const tags = [
+    `<title>${escHtml(title)}</title>`,
+    `<meta name="description" content="${escHtml(description)}"/>`,
+    `<link rel="canonical" href="${escHtml(canonical)}"/>`,
+    `<meta property="og:type" content="${escHtml(type)}"/>`,
+    `<meta property="og:title" content="${escHtml(title)}"/>`,
+    `<meta property="og:description" content="${escHtml(description)}"/>`,
+    `<meta property="og:url" content="${escHtml(canonical)}"/>`,
+    image ? `<meta property="og:image" content="${escHtml(image)}"/>` : '',
+    `<meta name="twitter:card" content="${image ? 'summary_large_image' : 'summary'}"/>`,
+    ld ? `<script type="application/ld+json">${JSON.stringify(ld)}</script>` : '',
+  ].filter(Boolean).join('\n  ');
+  return html
+    .replace(/<title[^>]*>[\s\S]*?<\/title>/i, '')
+    .replace(/<meta\s+name="description"[^>]*>/i, '')
+    .replace(/<link\s+rel="canonical"[^>]*>/i, '')
+    .replace('</head>', `  ${tags}\n</head>`);
+}
+
+function publicCache(res, { browser = 300, edge = 900, stale = 86400 } = {}) {
+  res.set('Cache-Control', `public, max-age=${browser}, s-maxage=${edge}, stale-while-revalidate=${stale}`);
+}
+function moneyHtml(value, currency = 'USD') {
+  const amount = Number(value || 0).toFixed(2);
+  return `${currency === 'USD' ? '$' : ''}${amount}${currency !== 'USD' ? ' ' + escHtml(currency) : ''}`;
+}
+function compactListText(value, max = 130) {
+  return truncate(value || '', max);
+}
+function productListCard(p) {
+  const out = Number(p.stock || 0) === 0;
+  const href = productPath(p.slug);
+  return `<a href="${href}" class="product-card ssr-card" aria-label="View product: ${escHtml(p.name)}">
+    <div class="product-thumb">
+      ${p.cover_image ? `<img src="${escHtml(p.cover_image)}" alt="${escHtml(p.name)}" loading="lazy"/>` : `<span class="product-thumb-ph">No image</span>`}
+    </div>
+    <div class="product-body">
+      <span class="product-cat">${escHtml(p.category || '')}</span>
+      <span class="product-name">${escHtml(p.name)}</span>
+      <span class="product-summary">${escHtml(compactListText(p.summary || p.description, 150))}</span>
+      <div class="product-foot">
+        <div>
+          <div class="product-price">${moneyHtml(p.price, p.currency)}</div>
+          <span class="product-stock ${out ? 'out' : ''}">${out ? 'Out of stock' : (Number(p.stock || 0) > 0 ? `${Number(p.stock)} in stock` : 'In stock')}</span>
+        </div>
+        <span class="case-link">View product →</span>
+      </div>
+    </div>
+  </a>`;
+}
+function blogListCard(p) {
+  const date = p.published_at || p.created_at;
+  return `<a class="post-card ssr-card" href="${blogPath(p.slug)}">
+    <div class="post-cover">${p.cover_url ? `<img src="${escHtml(p.cover_url)}" alt="${escHtml(p.title)}" loading="lazy"/>` : ''}</div>
+    <div class="post-body">
+      <span class="post-meta">${date ? new Date(date).toDateString() : ''}${p.author ? ' · ' + escHtml(p.author) : ''}</span>
+      <span class="post-title">${escHtml(p.title)}</span>
+      <span class="post-excerpt">${escHtml(compactListText(p.excerpt || p.title, 155))}</span>
+      <span class="case-link">Read →</span>
+    </div>
+  </a>`;
+}
+function caseListCard(c) {
+  return `<a href="${casePath(c.slug)}" class="case-card ssr-card" aria-label="View case: ${escHtml(c.title)}">
+    <div class="case-thumb">
+      ${c.cover_image ? `<img src="${escHtml(c.cover_image)}" alt="${escHtml(c.title)}" loading="lazy"/>` : `<div class="case-thumb-placeholder">No image yet</div>`}
+    </div>
+    <div class="case-body">
+      <div class="case-tags">${(c.tags || []).slice(0, 4).map(t => `<span class="tag">${escHtml(t)}</span>`).join('')}</div>
+      <h3>${escHtml(c.title)}</h3>
+      <p>${escHtml(compactListText(c.description, 180))}</p>
+      <span class="case-link">View case →</span>
+    </div>
+  </a>`;
+}
+function injectGridHtml(html, id, body) {
+  const open = new RegExp(`<div[^>]*id="${id}"[^>]*>`, 'i').exec(html);
+  if (!open) return html;
+  const bodyStart = open.index + open[0].length;
+  const nextSection = html.indexOf('<div id="empty-state"', bodyStart);
+  if (nextSection < 0) return html;
+  const gridClose = html.lastIndexOf('</div>', nextSection);
+  if (gridClose < bodyStart) return html;
+  return html.slice(0, bodyStart) + `\n      ${body}\n    ` + html.slice(gridClose);
+}
+function caseStudyHtml(value) {
+  let html = richTextHtml(value);
+  html = html.replace(/<p>\s*<strong>([^<]{2,90})<\/strong>\s*<br\s*\/?>\s*([\s\S]*?)<\/p>/gi, (_m, title, body) => {
+    const cleanTitle = escHtml(stripHtml(title));
+    const bulletParts = String(body)
+      .split(/<br\s*\/?>/i)
+      .map(part => part.replace(/^\s*[•*-]\s*/, '').trim())
+      .filter(Boolean);
+    if (bulletParts.length > 1) {
+      return `<h2>${cleanTitle}</h2><ul>${bulletParts.map(part => `<li>${part}</li>`).join('')}</ul>`;
+    }
+    return `<h2>${cleanTitle}</h2><p>${body}</p>`;
+  });
+  return html;
+}
+
+function staticPageLd(pathname, name, description, itemCount = 0) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name,
+    description,
+    url: `${CANONICAL_SITE_URL}${pathname}`,
+    ...(itemCount ? { mainEntity: { '@type': 'ItemList', numberOfItems: itemCount } } : {}),
+  };
+}
+async function renderShopPage(req, res, next) {
   try {
-    const slug = String(req.query.slug || '');
+    const category = String(req.params.category || req.query.category || '').trim();
+    let html = fs.readFileSync(path.join(__dirname, 'shop.html'), 'utf8');
+    let sql = `SELECT p.*, ${RATING_COLS} FROM products p WHERE p.status = 'active'`;
+    const params = [];
+    if (category) { sql += ` AND p.category = ?`; params.push(category); }
+    sql += ` ORDER BY p.sort_order ASC, p.created_at DESC`;
+    const products = (await db.query(sql, params)).rows.map(shapeProduct);
+    const canonicalPath = category ? `/shop/category/${encodeURIComponent(category)}` : pagePath('shop');
+    const title = category
+      ? `${category} hardware store — Rogersense`
+      : 'Engineering Dev Boards, LiDAR Sensors and Control Tools — Rogersense';
+    const description = 'Buy Rogersense engineering hardware, development kits, LiDAR sensors, relay modules and industrial control tools for validation and integration.';
+    html = injectSeoHead(html, {
+      title,
+      description,
+      canonical: `${CANONICAL_SITE_URL}${canonicalPath}`,
+      type: 'website',
+      ld: staticPageLd(canonicalPath, 'Rogersense Store', description, products.length),
+    });
+    const body = products.length
+      ? products.map(productListCard).join('\n      ')
+      : '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--color-text-muted);">No products in this category yet.</div>';
+    html = injectGridHtml(html, 'shop-grid', body);
+    publicCache(res, { browser: 120, edge: 900 });
+    res.send(html);
+  } catch (e) { next(e); }
+}
+async function renderCasesPage(req, res, next) {
+  try {
+    const category = String(req.params.category || req.query.category || '').trim();
+    let html = fs.readFileSync(path.join(__dirname, 'cases.html'), 'utf8');
+    let sql = `SELECT * FROM cases WHERE published = 1`;
+    const params = [];
+    if (category) { sql += ` AND category = ?`; params.push(category); }
+    sql += ` ORDER BY created_at DESC`;
+    const cases = (await db.query(sql, params)).rows.map(shapeCase);
+    const canonicalPath = category ? `/cases/category/${encodeURIComponent(category)}` : pagePath('cases');
+    const title = category
+      ? `${category} engineering case studies — Rogersense`
+      : 'Engineering Case Studies for Embedded, LiDAR and Industrial Systems — Rogersense';
+    const description = 'Rogersense case studies covering embedded hardware, firmware, LiDAR navigation, Bluetooth relay control and industrial product delivery.';
+    html = injectSeoHead(html, {
+      title,
+      description,
+      canonical: `${CANONICAL_SITE_URL}${canonicalPath}`,
+      type: 'website',
+      ld: staticPageLd(canonicalPath, 'Rogersense Case Studies', description, cases.length),
+    });
+    const body = cases.length
+      ? cases.map(caseListCard).join('\n      ')
+      : '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--color-text-muted);">No cases in this category yet.</div>';
+    html = injectGridHtml(html, 'cases-grid', body);
+    publicCache(res, { browser: 120, edge: 900 });
+    res.send(html);
+  } catch (e) { next(e); }
+}
+async function renderBlogPage(_req, res, next) {
+  try {
+    let html = fs.readFileSync(path.join(__dirname, 'blog.html'), 'utf8');
+    const data = await getPublishedPostList({ page: 1, limit: 12 });
+    const posts = data.posts || [];
+    const description = 'Engineering articles from Rogersense on embedded hardware, LiDAR, industrial controls, BOM risk, product validation and manufacturing-ready development.';
+    html = injectSeoHead(html, {
+      title: 'Embedded Hardware, LiDAR and Product Engineering Blog — Rogersense',
+      description,
+      canonical: `${CANONICAL_SITE_URL}${pagePath('blog')}`,
+      type: 'website',
+      ld: staticPageLd(pagePath('blog'), 'Rogersense Engineering Blog', description, posts.length),
+    });
+    const body = posts.length
+      ? posts.map(blogListCard).join('\n      ')
+      : '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--color-text-muted);">No posts yet — check back soon.</div>';
+    html = injectGridHtml(html, 'blog-grid', body);
+    publicCache(res, { browser: 120, edge: 900 });
+    res.send(html);
+  } catch (e) { next(e); }
+}
+
+// Legacy indexed PDP URLs -> clean product URLs.
+app.get('/product.html', (req, res) => {
+  const slug = String(req.query.slug || '');
+  return redirectLegacy(req, res, slug ? productPath(slug) : pagePath('shop'), ['slug']);
+});
+app.get('/product', (req, res) => {
+  const slug = String(req.query.slug || '');
+  return redirectLegacy(req, res, slug ? productPath(slug) : pagePath('shop'), ['slug']);
+});
+app.get('/products', (_req, res) => res.redirect(301, pagePath('shop')));
+
+// SEO: server-render the product detail page so crawlers see the actual product content
+// instead of only the client-side Loading shell.
+app.get('/products/:slug', async (req, res, next) => {
+  try {
+    const slug = String(req.params.slug || '');
+    const fs = require('fs');
+    let html = fs.readFileSync(path.join(__dirname, 'product.html'), 'utf8');
+    if (!slug) return res.send(html);
+    const { rows } = await db.query(`SELECT p.*, ${RATING_COLS} FROM products p WHERE p.slug = ?`, [slug]);
+    if (!rows[0] || rows[0].status !== 'active') return res.send(html);
+    const p = shapeProduct(rows[0]);
+    const canonical = `${CANONICAL_SITE_URL}${productPath(slug)}`;
+    const images = (p.images && p.images.length) ? p.images : (p.cover_image ? [p.cover_image] : []);
+    const image = absolutePublicUrl(images[0] || '');
+    const description = truncate(p.summary || p.description || p.name);
+    const availability = Number(p.stock || 0) === 0 ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock';
+    const ld = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: p.name,
+      description,
+      sku: p.slug,
+      ...(image ? { image: [image] } : {}),
+      offers: {
+        '@type': 'Offer',
+        url: canonical,
+        priceCurrency: p.currency || 'USD',
+        price: String(Number(p.price || 0).toFixed(2)),
+        availability,
+      },
+    };
+    const price = `${p.currency === 'USD' ? '$' : ''}${Number(p.price || 0).toFixed(2)}${p.currency !== 'USD' ? ' ' + escHtml(p.currency) : ''}`;
+    const stock = Number(p.stock || 0) === 0 ? 'Out of stock' : (Number(p.stock || 0) > 0 ? `${Number(p.stock)} in stock` : 'In stock');
+    const body = `
+      <div class="pdp" data-ssr="1">
+        <div>
+          <div class="g-main">${images[0] ? `<img id="g-main-img" src="${escHtml(images[0])}" alt="${escHtml(p.name)}"/>` : ''}</div>
+          ${images.length > 1 ? `<div class="g-thumbs">${images.map((u, i) => `<div class="g-thumb ${i === 0 ? 'active' : ''}" data-img="${escHtml(u)}"><img src="${escHtml(u)}" alt="${escHtml(p.name)}"/></div>`).join('')}</div>` : ''}
+        </div>
+        <div>
+          <h1 class="p-title">${escHtml(p.name)}</h1>
+          <div class="p-rating">${p.rating_count ? `${escHtml(p.rating_avg)} · ${escHtml(p.rating_count)} review${Number(p.rating_count) > 1 ? 's' : ''}` : 'No reviews yet'}</div>
+          <div class="p-price">${price}</div>
+          <div class="p-stock ${Number(p.stock || 0) === 0 ? 'out' : ''}">${stock}</div>
+          <p class="p-summary">${escHtml(p.summary || '')}</p>
+          <div class="p-meta">
+            ${p.category ? `<div>Category: ${escHtml(p.category)}</div>` : ''}
+            <div style="margin-top:6px;">Custom requirements? <a href="/quote">Submit a brief →</a></div>
+          </div>
+        </div>
+      </div>
+      <div class="tabs">
+        <div class="tabs-nav"><button class="active" data-tab="desc">Description</button><button data-tab="reviews" id="reviews">Reviews (${escHtml(p.rating_count || 0)})</button></div>
+        <div class="tab-panel active" id="panel-desc"><div class="prose">${richTextHtml(p.description, p.summary)}</div></div>
+        <div class="tab-panel" id="panel-reviews"></div>
+      </div>`;
+    html = injectSeoHead(html, { title: `${p.name} — Rogersense`, description, canonical, image, type: 'product', ld });
+    html = html.replace(/<span id="crumb-name">[\s\S]*?<\/span>/, `<span id="crumb-name">${escHtml(p.name)}</span>`);
+    html = html.replace(/<div id="pdp-root">[\s\S]*?<\/div>/, `<div id="pdp-root">${body}</div>`);
+    publicCache(res, { browser: 300, edge: 1800 });
+    res.send(html);
+  } catch (e) { next(); }
+});
+
+// Legacy indexed case URLs -> clean case URLs.
+app.get('/case-detail.html', (req, res) => {
+  const slug = String(req.query.slug || '');
+  return redirectLegacy(req, res, slug ? casePath(slug) : pagePath('cases'), ['slug']);
+});
+app.get('/case-detail', (req, res) => {
+  const slug = String(req.query.slug || '');
+  return redirectLegacy(req, res, slug ? casePath(slug) : pagePath('cases'), ['slug']);
+});
+
+// SEO: server-render case detail pages for published case studies.
+app.get('/cases/:slug', async (req, res, next) => {
+  try {
+    const slug = String(req.params.slug || '');
+    const fs = require('fs');
+    let html = fs.readFileSync(path.join(__dirname, 'case-detail.html'), 'utf8');
+    if (!slug) return res.send(html);
+    const { rows } = await db.query(`SELECT * FROM cases WHERE slug = ? AND published = 1`, [slug]);
+    if (!rows[0]) return res.send(html);
+    const c = shapeCase(rows[0]);
+    const canonical = `${CANONICAL_SITE_URL}${casePath(slug)}`;
+    const images = (c.images && c.images.length) ? c.images : (c.cover_image ? [c.cover_image] : []);
+    const image = absolutePublicUrl(images[0] || '');
+    const description = truncate(c.description || c.title);
+    const ld = {
+      '@context': 'https://schema.org',
+      '@type': 'CreativeWork',
+      headline: c.title,
+      description,
+      url: canonical,
+      publisher: { '@type': 'Organization', name: 'Rogersense' },
+      ...(image ? { image: [image] } : {}),
+    };
+    const body = `
+      <a href="/cases" class="btn btn-ghost" style="margin-bottom:24px;">← All Cases</a>
+      <div class="case-tags" style="margin-bottom:12px;">${(c.tags || []).map(t => `<span class="tag">${escHtml(t)}</span>`).join('')}</div>
+      <h1 style="font-size:clamp(1.6rem,4vw,2.2rem);margin-bottom:16px;">${escHtml(c.title)}</h1>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:32px;font-size:0.875rem;color:var(--color-text-muted);">
+        ${c.category ? `<span>Category: ${escHtml(c.category)}</span>` : ''}
+      </div>
+      ${c.cover_image
+        ? `<div style="border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--color-border);margin-bottom:32px;aspect-ratio:16/9;"><img src="${escHtml(c.cover_image)}" alt="${escHtml(c.title)}" style="width:100%;height:100%;object-fit:cover;"/></div>`
+        : ''}
+      <div class="case-study" style="font-size:1rem;line-height:1.8;color:var(--color-text);max-width:680px;">${caseStudyHtml(c.description)}</div>
+      ${images.length > 1 ? `<h3 style="font-family:var(--font-sans);font-size:1rem;font-weight:600;margin:32px 0 4px;">Photos</h3><div class="gallery" id="gallery">${images.map(img => `<img src="${escHtml(img)}" alt="${escHtml(c.title)}" loading="lazy"/>`).join('')}</div>` : ''}`;
+    html = injectSeoHead(html, { title: `${c.title} — Rogersense`, description, canonical, image, type: 'article', ld });
+    html = html.replace(/<div id="loading"[^>]*>[\s\S]*?<\/div>/, '<div id="loading" style="display:none;"></div>');
+    html = html.replace(/<div id="case-content"[^>]*>[\s\S]*?<\/div>/, `<div id="case-content" style="display:block;" data-ssr="1">${body}</div>`);
+    publicCache(res, { browser: 300, edge: 1800 });
+    res.send(html);
+  } catch (e) { next(); }
+});
+
+// Legacy indexed blog URLs -> clean blog URLs.
+app.get('/blog-post.html', (req, res) => {
+  const slug = String(req.query.slug || '');
+  return redirectLegacy(req, res, slug ? blogPath(slug) : pagePath('blog'), ['slug']);
+});
+app.get('/blog-post', (req, res) => {
+  const slug = String(req.query.slug || '');
+  return redirectLegacy(req, res, slug ? blogPath(slug) : pagePath('blog'), ['slug']);
+});
+
+// SEO: server-render blog detail pages (inject title/meta/OG/JSON-LD + article
+// body so crawlers get full content without executing JS).
+app.get('/blog/:slug', async (req, res, next) => {
+  try {
+    const slug = String(req.params.slug || '');
     const fs = require('fs');
     let html = fs.readFileSync(path.join(__dirname, 'blog-post.html'), 'utf8');
     if (!slug) return res.send(html);
-    const { rows } = await db.query(`SELECT * FROM posts WHERE slug = ? AND status = 'published'`, [slug]);
-    const p = rows[0];
+    const p = await getPublishedPostRow(slug);
     if (!p) return res.send(html);
-    db.query(`UPDATE posts SET views = views + 1 WHERE slug = ?`, [slug]).catch(() => {});
+    notePostView(slug);
     const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
     const tags = jp(p.tags, []);
-    const url = `${SITE_URL}/blog-post.html?slug=${encodeURIComponent(slug)}`;
+    const url = `${CANONICAL_SITE_URL}${blogPath(slug)}`;
     const desc = esc(p.excerpt || p.title);
-    const cover = p.cover_url ? (p.cover_url.startsWith('http') ? p.cover_url : SITE_URL + p.cover_url) : '';
+    const cover = p.cover_url ? (p.cover_url.startsWith('http') ? p.cover_url : CANONICAL_SITE_URL + p.cover_url) : '';
     const date = p.published_at || p.created_at;
     const ld = {
       '@context': 'https://schema.org', '@type': 'Article',
@@ -1597,16 +2296,17 @@ app.get('/blog-post.html', async (req, res, next) => {
       `<h1 style="font-size:clamp(1.7rem,4.5vw,2.4rem);line-height:1.2;">${esc(p.title)}</h1>` +
       `<p style="color:var(--color-text-light);font-size:.85rem;margin-top:10px;">${date ? new Date(date).toDateString() : ''}${p.author ? ' · ' + esc(p.author) : ''}</p>` +
       (cover ? `<img class="article-cover" src="${esc(p.cover_url)}" alt="${esc(p.title)}"/>` : '') +
-      `<div class="article-body">${p.content || ''}</div>`;
+      `<div class="article-body">${cleanInternalLinks(p.content || '')}</div>`;
     html = html.replace(/(<article class="article" id="article")(>)[\s\S]*?(<\/article>)/,
       `$1 data-ssr="1"$2${body}$3`);
+    publicCache(res, { browser: 300, edge: 1800 });
     res.send(html);
   } catch (e) { next(); }
 });
 
 // SEO: robots.txt
 app.get('/robots.txt', (_req, res) => {
-  res.type('text/plain').send(`User-agent: *\nAllow: /\nSitemap: ${SITE_URL}/sitemap_index.xml\n`);
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nSitemap: ${CANONICAL_SITE_URL}/sitemap_index.xml\n`);
 });
 
 // ════════════════════════════════════════════════════════════
@@ -1617,23 +2317,65 @@ app.use('/assets', express.static(path.join(__dirname, 'assets'), {
   maxAge: '7d',
   setHeaders: (res) => res.set('Cache-Control', 'public, max-age=604800'),
 }));
-// Only `.html` page routes (+ `/`) — extensionless aliases are intentionally
-// omitted so they never collide with API routes like GET /cases.
-const PAGES = ['index', 'cases', 'case-detail', 'quote', 'about', 'login', 'dashboard', 'admin', 'shop', 'product', 'blog', 'blog-post', 'contact', 'privacy', 'returns', 'shipping', 'gdpr', 'terms', 'reset', 'track'];
+app.get(/^\/([a-f0-9]{32}\.txt)$/i, (req, res, next) => {
+  const filePath = path.join(__dirname, req.params[0]);
+  if (!fs.existsSync(filePath)) return next();
+  res.type('text/plain')
+    .set('Cache-Control', 'public, max-age=300')
+    .sendFile(filePath);
+});
+const PAGES = ['index', 'cases', 'quote', 'about', 'login', 'dashboard', 'admin', 'shop', 'blog', 'contact', 'privacy', 'returns', 'shipping', 'gdpr', 'terms', 'reset', 'track'];
 // Pages with per-user / sensitive content must never be edge-cached.
 const NO_CACHE_PAGES = new Set(['admin', 'login', 'dashboard', 'reset']);
+const NOINDEX_PAGES = new Set(['admin', 'login', 'dashboard', 'reset']);
 function sendPage(res, name) {
   res.set('Cache-Control', NO_CACHE_PAGES.has(name) ? 'no-store'
     : 'public, max-age=300, s-maxage=600');   // browser 5min, CDN edge 10min
+  if (NOINDEX_PAGES.has(name)) {
+    res.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  }
   res.sendFile(path.join(__dirname, `${name}.html`));
 }
 app.get('/', (_req, res) => sendPage(res, 'index'));
-// Clean admin entrance: /admin → admin.html (/admin.html also still works).
-app.get('/admin', (_req, res) => sendPage(res, 'admin'));
-PAGES.forEach(name => {
-  app.get(`/${name}.html`, (_req, res) => sendPage(res, name));
+app.get('/shop/category/:category', renderShopPage);
+app.get('/cases/category/:category', renderCasesPage);
+app.get(pagePath('shop'), (req, res) => {
+  if (req.query.p) return redirectLegacy(req, res, productPath(String(req.query.p)), ['p']);
+  if (req.query.category) return redirectLegacy(req, res, `/shop/category/${encodeURIComponent(String(req.query.category))}`, ['category']);
+  return renderShopPage(req, res, () => sendPage(res, 'shop'));
 });
-app.get('/track', (_req, res) => sendPage(res, 'track'));
+app.get(pagePath('cases'), (req, res) => {
+  if (req.query.category) return redirectLegacy(req, res, `/cases/category/${encodeURIComponent(String(req.query.category))}`, ['category']);
+  return renderCasesPage(req, res, () => sendPage(res, 'cases'));
+});
+app.get(pagePath('blog'), (req, res) => {
+  if (req.query.slug) return redirectLegacy(req, res, blogPath(String(req.query.slug)), ['slug']);
+  return renderBlogPage(req, res, () => sendPage(res, 'blog'));
+});
+PAGES.forEach(name => {
+  if (['index', 'shop', 'cases', 'blog'].includes(name)) return;
+  app.get(pagePath(name), (_req, res) => sendPage(res, name));
+});
+app.get('/:name.html', (req, res, next) => {
+  const name = String(req.params.name || '');
+  if (!PAGES.includes(name)) return next();
+  let target = pagePath(name);
+  if (name === 'cases' && req.query.category) {
+    target = `/cases/category/${encodeURIComponent(String(req.query.category))}`;
+    return redirectLegacy(req, res, target, ['category']);
+  }
+  if (name === 'shop' && req.query.category) {
+    target = `/shop/category/${encodeURIComponent(String(req.query.category))}`;
+    return redirectLegacy(req, res, target, ['category']);
+  }
+  if (name === 'shop' && req.query.p) {
+    return redirectLegacy(req, res, productPath(String(req.query.p)), ['p']);
+  }
+  if (name === 'blog' && req.query.slug) {
+    return redirectLegacy(req, res, blogPath(String(req.query.slug)), ['slug']);
+  }
+  return redirectLegacy(req, res, target);
+});
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
 // Favicon (SVG) — sensor mark.
@@ -1644,7 +2386,11 @@ app.get('/favicon.ico', (_req, res) => res.redirect(302, '/favicon.svg?v=2026060
 
 // Friendly 404 for unknown GET routes (after all real routes).
 app.use((req, res) => {
-  if (req.method === 'GET' && req.accepts('html')) return res.status(404).sendFile(path.join(__dirname, '404.html'));
+  if (req.method === 'GET' && req.accepts('html')) {
+    return res.status(404)
+      .set('X-Robots-Tag', 'noindex, nofollow')
+      .sendFile(path.join(__dirname, '404.html'));
+  }
   res.status(404).json({ message: 'Not found' });
 });
 
@@ -1654,7 +2400,10 @@ db.initDB()
   .finally(() => {
     // Bind to loopback only — Nginx reverse-proxies from the same host.
     // Port 3002 is never exposed externally (no firewall opening needed).
-    app.listen(PORT, '127.0.0.1', () => console.log(`🚀 rogersense server on http://127.0.0.1:${PORT}`));
+    app.listen(PORT, '127.0.0.1', () => {
+      console.log(`🚀 rogersense server on http://127.0.0.1:${PORT}`);
+      warmPublicPostCache();
+    });
   });
 
 module.exports = app;

@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Passive component risk architecture</title>
+  <desc id="desc">A risk architecture diagram for embedded product teams managing MLCC and resistor volatility.</desc>
+  <rect width="1200" height="720" fill="#0f1923"/>
+  <rect x="56" y="54" width="1088" height="612" rx="22" fill="#0d2236" stroke="#1e2d3d" stroke-width="2"/>
+  <text x="92" y="116" fill="#f0f4f8" font-family="Inter, Arial, sans-serif" font-size="36" font-weight="700">Passive Component Risk Architecture</text>
+  <text x="94" y="154" fill="#8ba3b8" font-family="Inter, Arial, sans-serif" font-size="18">Plan sourcing, validation and firmware choices around the parts most likely to stop a build.</text>
+
+  <g font-family="Inter, Arial, sans-serif">
+    <rect x="94" y="224" width="245" height="150" rx="14" fill="#162030" stroke="#244057"/>
+    <text x="122" y="267" fill="#00d4aa" font-size="16" font-weight="700">1. BOM exposure</text>
+    <text x="122" y="304" fill="#f0f4f8" font-size="22" font-weight="700">Classify risk</text>
+    <text x="122" y="338" fill="#8ba3b8" font-size="15">Voltage derating</text>
+    <text x="122" y="363" fill="#8ba3b8" font-size="15">Tolerance and package</text>
+
+    <rect x="381" y="224" width="245" height="150" rx="14" fill="#162030" stroke="#244057"/>
+    <text x="409" y="267" fill="#00d4aa" font-size="16" font-weight="700">2. Alternate parts</text>
+    <text x="409" y="304" fill="#f0f4f8" font-size="22" font-weight="700">Approve options</text>
+    <text x="409" y="338" fill="#8ba3b8" font-size="15">Second sources</text>
+    <text x="409" y="363" fill="#8ba3b8" font-size="15">Footprint strategy</text>
+
+    <rect x="668" y="224" width="245" height="150" rx="14" fill="#162030" stroke="#244057"/>
+    <text x="696" y="267" fill="#00d4aa" font-size="16" font-weight="700">3. Validation gate</text>
+    <text x="696" y="304" fill="#f0f4f8" font-size="22" font-weight="700">Retest changes</text>
+    <text x="696" y="338" fill="#8ba3b8" font-size="15">Power and thermal</text>
+    <text x="696" y="363" fill="#8ba3b8" font-size="15">EMI and endurance</text>
+
+    <rect x="381" y="464" width="245" height="120" rx="14" fill="#0f1923" stroke="#00d4aa" stroke-width="2"/>
+    <text x="409" y="507" fill="#f0f4f8" font-size="22" font-weight="700">Pilot build lock</text>
+    <text x="409" y="541" fill="#8ba3b8" font-size="15">Freeze substitutions</text>
+    <text x="409" y="566" fill="#8ba3b8" font-size="15">Track expiry dates</text>
+
+    <rect x="736" y="464" width="245" height="120" rx="14" fill="#0f1923" stroke="#00d4aa" stroke-width="2"/>
+    <text x="764" y="507" fill="#f0f4f8" font-size="22" font-weight="700">Firmware margin</text>
+    <text x="764" y="541" fill="#8ba3b8" font-size="15">ADC thresholds</text>
+    <text x="764" y="566" fill="#8ba3b8" font-size="15">Brownout behavior</text>
+  </g>
+
+  <g fill="none" stroke="#00d4aa" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M340 299h40"/>
+    <path d="M626 299h40"/>
+    <path d="M790 376v88"/>
+    <path d="M668 524h-42"/>
+  </g>
+  <g fill="#00d4aa">
+    <path d="M374 289l18 10-18 10z"/>
+    <path d="M660 289l18 10-18 10z"/>
+    <path d="M780 456l10 18 10-18z"/>
+    <path d="M633 514l-18 10 18 10z"/>
+  </g>
+</svg>

@@ -5,7 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="description" content="You describe the problem. We architect the solution. Hardware · Firmware · Mechanical — delivered as PCBA or finished product."/>
   <title>Rogersense — System Architecture & Product Delivery</title>
-  <link rel="stylesheet" href="assets/style.css"/>
+  <link rel="canonical" href="https://rogersense.com/"/>
+  <link rel="stylesheet" href="/assets/style.css?v=20260701a"/>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://rogersense.com/#organization",
+        "name": "Rogersense",
+        "url": "https://rogersense.com/",
+        "description": "Rogersense provides hardware, firmware, mechanical and product system engineering from architecture to PCBA or finished product delivery."
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://rogersense.com/#website",
+        "url": "https://rogersense.com/",
+        "name": "Rogersense",
+        "publisher": { "@id": "https://rogersense.com/#organization" }
+      }
+    ]
+  }
+  </script>
   <style>
     .two-col { display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:start; }
     .two-col-center { align-items:center; }
@@ -55,16 +77,16 @@
     </a>
     <ul class="nav-links">
       <li><a href="/#how-it-works">How it works</a></li>
-      <li><a href="shop.html">Store</a></li>
-      <li><a href="cases.html">Cases</a></li>
-      <li><a href="blog.html">Blog</a></li>
-      <li><a href="about.html">About</a></li>
-      <li><a href="contact.html">Contact</a></li>
+      <li><a href="/shop">Store</a></li>
+      <li><a href="/cases">Cases</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/about">About</a></li>
+      <li><a href="/contact">Contact</a></li>
       <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
     </ul>
     <div class="nav-actions" id="nav-actions">
-      <a href="/login.html" class="btn btn-outline btn-sm">Sign in</a>
-      <a href="/quote.html" class="btn btn-primary btn-sm">Submit Brief →</a>
+      <a href="/login" class="btn btn-outline btn-sm">Sign in</a>
+      <a href="/quote" class="btn btn-primary btn-sm">Submit Brief →</a>
     </div>
     <button class="nav-hamburger" id="hamburger" aria-label="Menu">
       <span></span><span></span><span></span>
@@ -76,7 +98,7 @@
   <div class="nav-drawer-overlay" id="drawer-overlay"></div>
   <div class="nav-drawer-panel">
     <button class="nav-drawer-close" id="drawer-close">✕</button>
-    <a href="/">Home</a><a href="/#how-it-works">How it works</a><a href="shop.html">Store</a><a href="cases.html">Cases</a><a href="blog.html">Blog</a><a href="about.html">About</a><a href="contact.html">Contact</a>
+    <a href="/">Home</a><a href="/#how-it-works">How it works</a><a href="/shop">Store</a><a href="/cases">Cases</a><a href="/blog">Blog</a><a href="/about">About</a><a href="/contact">Contact</a>
     <a href="https://forum.rogersense.com" target="_blank">Forum</a>
   </div>
 </div>
@@ -89,8 +111,8 @@
     <hr class="hero-rule"/>
     <p class="hero-desc" style="font-size:0.9rem;">From system architecture to mass production. Tell us what you need built and we'll get back with a custom quote within 24 hours.</p>
     <div class="hero-actions" style="margin-top:28px;">
-      <a href="/quote.html" class="btn btn-primary btn-lg">Submit Your Brief →</a>
-      <a href="cases.html" class="btn btn-outline btn-lg">See Our Work</a>
+      <a href="/quote" class="btn btn-primary btn-lg">Submit Your Brief →</a>
+      <a href="/cases" class="btn btn-outline btn-lg">See Our Work</a>
     </div>
   </div>
 </section>
@@ -212,7 +234,7 @@
         <p class="eyebrow mb-8">Recent work</p>
         <h2>Selected cases.</h2>
       </div>
-      <a href="cases.html" class="btn btn-ghost cases-view-all-top">View all →</a>
+      <a href="/cases" class="btn btn-ghost cases-view-all-top">View all →</a>
     </div>
     <div class="cases-grid" id="cases-preview">
       <div class="case-card">
@@ -221,7 +243,7 @@
           <div class="case-tags"><span class="tag">IoT</span><span class="tag">BLE</span></div>
           <h3>Smart Pet Door</h3>
           <p>Automated BLE-enabled pet door with mobile app, power management, and AWS cloud integration.</p>
-          <a href="case-detail.html?slug=smart-pet-door" class="case-link">View case →</a>
+          <a href="/cases/smart-pet-door" class="case-link">View case →</a>
         </div>
       </div>
       <div class="case-card">
@@ -230,7 +252,7 @@
           <div class="case-tags"><span class="tag">Medical</span><span class="tag">AWS</span></div>
           <h3>Remote Medical Hub</h3>
           <p>Real-time location service IoT product for medical devices with Azure cloud integration.</p>
-          <a href="case-detail.html?slug=remote-medical-hub" class="case-link">View case →</a>
+          <a href="/cases/remote-medical-hub" class="case-link">View case →</a>
         </div>
       </div>
       <div class="case-card">
@@ -239,12 +261,12 @@
           <div class="case-tags"><span class="tag">Industrial</span><span class="tag">Solar</span></div>
           <h3>Solar Pump Controller</h3>
           <p>3-phase variable frequency drive optimised for direct solar DC input for remote pumping.</p>
-          <a href="case-detail.html?slug=solar-pump-controller" class="case-link">View case →</a>
+          <a href="/cases/solar-pump-controller" class="case-link">View case →</a>
         </div>
       </div>
     </div>
     <div class="cases-view-all-bottom">
-      <a href="cases.html" class="btn btn-outline">View all cases →</a>
+      <a href="/cases" class="btn btn-outline">View all cases →</a>
     </div>
   </div>
 </section>
@@ -259,7 +281,7 @@
         <h2>Build on our platform.</h2>
         <p style="margin:16px 0 24px;">Dev boards, SDK, and a community of engineers. Start hacking in minutes — and join the conversation in our forum.</p>
         <div class="hero-actions">
-          <a href="cases.html?category=devboard" class="btn btn-outline">Explore Dev Boards</a>
+          <a href="/cases/category/devboard" class="btn btn-outline">Explore Dev Boards</a>
           <a href="https://forum.rogersense.com" target="_blank" class="btn btn-ghost">Join the Forum →</a>
         </div>
       </div>
@@ -298,21 +320,21 @@
         <p class="footer-brand-desc">End-to-end product engineering.<br>Hardware · Firmware · Mechanical.</p>
       </div>
       <div class="footer-col"><h4>Explore</h4><ul>
-        <li><a href="shop.html">Store</a></li>
-        <li><a href="cases.html">Cases</a></li>
-        <li><a href="blog.html">Blog</a></li>
-        <li><a href="about.html">About</a></li>
+        <li><a href="/shop">Store</a></li>
+        <li><a href="/cases">Cases</a></li>
+        <li><a href="/blog">Blog</a></li>
+        <li><a href="/about">About</a></li>
       </ul></div>
       <div class="footer-col"><h4>Company</h4><ul>
-        <li><a href="contact.html">Contact</a></li>
-        <li><a href="quote.html">Get a Quote</a></li>
+        <li><a href="/contact">Contact</a></li>
+        <li><a href="/quote">Get a Quote</a></li>
         <li><a href="https://forum.rogersense.com" target="_blank">Forum</a></li>
       </ul></div>
       <div class="footer-col"><h4>Legal</h4><ul>
-        <li><a href="privacy.html">Privacy Policy</a></li><li><a href="terms.html">Terms of Service</a></li>
-        <li><a href="returns.html">Returns &amp; Refunds</a></li>
-        <li><a href="shipping.html">Shipping</a></li>
-        <li><a href="gdpr.html">Data Deletion</a></li>
+        <li><a href="/privacy">Privacy Policy</a></li><li><a href="/terms">Terms of Service</a></li>
+        <li><a href="/returns">Returns &amp; Refunds</a></li>
+        <li><a href="/shipping">Shipping</a></li>
+        <li><a href="/gdpr">Data Deletion</a></li>
       </ul></div>
     </div>
     <div class="footer-bottom">
@@ -322,7 +344,7 @@
   </div>
 </footer>
 
-<script src="assets/main.js?v=4"></script>
+<script src="/assets/main.js?v=20260701a"></script>
 <script>
   document.querySelectorAll('.discipline-card').forEach(c => c.addEventListener('click', () => c.classList.toggle('selected')));
   document.querySelectorAll('.deliverable-btn').forEach(btn => btn.addEventListener('click', () => {
@@ -337,26 +359,35 @@
     const deliverable = document.querySelector('.deliverable-btn.selected')?.dataset.value || '';
     const description = document.getElementById('inline-desc')?.value || '';
     const params = new URLSearchParams({ disciplines: disciplines.join(','), deliverable, description });
-    window.location.href = `/quote.html?${params}`;
+    window.location.href = `/quote?${params}`;
   });
   async function loadCasesPreview() {
     try {
       const data = await CasesAPI.list();
       if (!data?.cases?.length) return;
       document.getElementById('cases-preview').innerHTML = data.cases.slice(0,3).map(c => {
-        const plain = (c.description || '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
-        const excerpt = plain.length > 150 ? plain.slice(0, 150) + '…' : plain;
         return `
         <div class="case-card">
           <div class="case-thumb">${c.cover_image ? `<img src="${c.cover_image}" alt="${c.title}" loading="lazy"/>` : `<div class="case-thumb-placeholder">No image</div>`}</div>
           <div class="case-body">
             <div class="case-tags">${(c.tags||[]).slice(0,3).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
-            <h3>${c.title}</h3><p>${excerpt}</p>
-            <a href="case-detail.html?slug=${c.slug}" class="case-link">View case →</a>
+            <h3>${c.title}</h3><p>${casePreviewText(c.description)}</p>
+            <a href="/cases/${c.slug}" class="case-link">View case →</a>
           </div>
         </div>`;
       }).join('');
     } catch(_) {}
+  }
+  function casePreviewText(html) {
+    const text = String(html || '')
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return text.length > 150 ? text.slice(0, 147).trim() + '...' : text;
   }
   loadCasesPreview();
 </script>

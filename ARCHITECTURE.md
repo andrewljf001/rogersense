@@ -63,14 +63,14 @@ The earlier draft of this document planned a Workers-serverless backend. We are 
 
 | File | Route | Description |
 |------|-------|-------------|
-| `index.html` | `/` | Homepage — hero, how it works, services, inline brief form, cases preview, dev boards CTA |
-| `cases.html` | `/cases` | Case showcase — category tabs + photo grid (API-driven, placeholder fallback) |
-| `case-detail.html` | `/case-detail?slug=` | Single case — cover, gallery + lightbox, description |
-| `quote.html` | `/quote` | 5-step brief form (disciplines → deliverable → description → files → contact); requires login |
-| `about.html` | `/about` | About the team |
-| `login.html` | `/login` | Login / Register (email+password + GitHub OAuth) |
-| `dashboard.html` | `/dashboard` | Client dashboard — my briefs, status, message thread, profile |
-| `admin.html` | `/admin` | Admin panel — manage briefs (status + reply), manage cases (CRUD) |
+| `index.html` template | `/` | Homepage — hero, how it works, services, inline brief form, cases preview, dev boards CTA |
+| `cases.html` template | `/cases` | Case showcase — category tabs + photo grid (API-driven, placeholder fallback) |
+| `case-detail.html` template | `/cases/:slug` | Single case — cover, gallery + lightbox, description |
+| `/quote` | `/quote` | 5-step brief form (disciplines → deliverable → description → files → contact); requires login |
+| `/about` | `/about` | About the team |
+| `/login` | `/login` | Login / Register (email+password + GitHub OAuth) |
+| `/dashboard` | `/dashboard` | Client dashboard — my briefs, status, message thread, profile |
+| `admin.html` template | `/admin` | Admin panel — manage briefs (status + reply), manage cases (CRUD) |
 
 ### Frontend ↔ Backend contract
 
@@ -216,6 +216,8 @@ Free tier: 10GB storage, 1M writes/month, zero egress.
 
 Flow: `multer` (memory storage) receives the upload → `PutObjectCommand` writes to R2 → DB stores the key → downloads use a **presigned URL (~1h)**. Buckets are private; no public direct links.
 
+Blog publishing images are the exception to direct browser uploads: admin Blog cover images and automated content-publishing uploads use `POST /api/admin/upload/image`. The API requires an admin JWT, accepts multipart field `image` or `file`, converts the image to WebP on the server with `sharp` (or `CWEBP_BIN` as a deployment fallback), stores only the WebP object in R2 under `products/blog/`, and returns the public `/img?key=...` URL. Original images and base64 payloads are never written to D1.
+
 ### API Endpoints
 
 ```
@@ -252,6 +254,10 @@ Admin (admin JWT — JWT_ADMIN_SECRET, 12h)
   POST   /api/admin/cases            create
   PUT    /api/admin/cases/:id        update
   DELETE /api/admin/cases/:id
+  POST   /api/admin/upload/image     admin image upload → server WebP → R2 public /img URL
+  GET    /api/admin/posts            admin post list (id + slug included)
+  POST   /api/admin/posts            create/upsert post by slug
+  PUT    /api/admin/posts/:id        update post
   POST   /api/admin/upload           presigned upload helper / direct upload
   GET    /api/admin/settings
   PUT    /api/admin/settings/:key
@@ -336,7 +342,7 @@ rogersense/
 ├── package.json
 ├── .env.example              # documented, real .env gitignored
 ├── assets/                   # style.css (locked theme) + main.js (API client)
-├── index.html cases.html case-detail.html quote.html
-├── about.html login.html dashboard.html admin.html
+├── index.html / cases.html / case-detail.html / quote.html
+├── about.html / login.html / dashboard.html / admin.html
 └── uploads/                  # (gitignored; only used if a local-disk fallback is enabled)
 ```

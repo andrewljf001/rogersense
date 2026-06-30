@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Late August validation flow</title>
+  <desc id="desc">A validation flow for late August embedded hardware pilot builds affected by passive component price volatility.</desc>
+  <rect width="1200" height="720" fill="#0f1923"/>
+  <rect x="58" y="56" width="1084" height="608" rx="24" fill="#0d2236" stroke="#1e2d3d" stroke-width="2"/>
+  <text x="96" y="120" fill="#f0f4f8" font-family="Inter, Arial, sans-serif" font-size="36" font-weight="700">Late August Validation Flow</text>
+  <text x="98" y="158" fill="#8ba3b8" font-family="Inter, Arial, sans-serif" font-size="18">Use the pilot window to prove alternate passives before they reach production hardware.</text>
+
+  <g font-family="Inter, Arial, sans-serif">
+    <rect x="96" y="246" width="190" height="130" rx="14" fill="#162030" stroke="#244057"/>
+    <text x="124" y="286" fill="#00d4aa" font-size="15" font-weight="700">WEEK 1</text>
+    <text x="124" y="322" fill="#f0f4f8" font-size="21" font-weight="700">BOM freeze</text>
+    <text x="124" y="352" fill="#8ba3b8" font-size="14">Rank risky MLCCs</text>
+
+    <rect x="350" y="246" width="190" height="130" rx="14" fill="#162030" stroke="#244057"/>
+    <text x="378" y="286" fill="#00d4aa" font-size="15" font-weight="700">WEEK 2</text>
+    <text x="378" y="322" fill="#f0f4f8" font-size="21" font-weight="700">Lab swap</text>
+    <text x="378" y="352" fill="#8ba3b8" font-size="14">Thermal and power</text>
+
+    <rect x="604" y="246" width="190" height="130" rx="14" fill="#162030" stroke="#244057"/>
+    <text x="632" y="286" fill="#00d4aa" font-size="15" font-weight="700">WEEK 3</text>
+    <text x="632" y="322" fill="#f0f4f8" font-size="21" font-weight="700">Pilot build</text>
+    <text x="632" y="352" fill="#8ba3b8" font-size="14">Small batch audit</text>
+
+    <rect x="858" y="246" width="190" height="130" rx="14" fill="#162030" stroke="#244057"/>
+    <text x="886" y="286" fill="#00d4aa" font-size="15" font-weight="700">WEEK 4</text>
+    <text x="886" y="322" fill="#f0f4f8" font-size="21" font-weight="700">Release gate</text>
+    <text x="886" y="352" fill="#8ba3b8" font-size="14">Lock approved AVL</text>
+
+    <rect x="244" y="484" width="712" height="96" rx="16" fill="#0f1923" stroke="#00d4aa" stroke-width="2"/>
+    <text x="286" y="526" fill="#f0f4f8" font-size="22" font-weight="700">Decision: keep build moving or pause before production risk compounds</text>
+    <text x="286" y="558" fill="#8ba3b8" font-size="15">Every alternate part should have electrical, firmware and supply-chain signoff.</text>
+  </g>
+
+  <g fill="none" stroke="#00d4aa" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M286 311h64"/>
+    <path d="M540 311h64"/>
+    <path d="M794 311h64"/>
+    <path d="M953 376v52c0 31-25 56-56 56H600"/>
+    <path d="M191 376v52c0 31 25 56 56 56h353"/>
+  </g>
+  <g fill="#00d4aa">
+    <path d="M344 301l18 10-18 10z"/>
+    <path d="M598 301l18 10-18 10z"/>
+    <path d="M852 301l18 10-18 10z"/>
+    <path d="M610 474l-18 10 18 10z"/>
+    <path d="M590 474l18 10-18 10z"/>
+  </g>
+</svg>
