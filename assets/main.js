@@ -226,6 +226,35 @@ function slugify(str) {
 function safeDecode(value) {
   try { return decodeURIComponent(value); } catch { return String(value || ''); }
 }
+function decodePercentText(value) {
+  const text = String(value || '');
+  try { return decodeURIComponent(text); } catch {
+    return text.replace(/%20/gi, ' ').replace(/%26/gi, '&').replace(/%2F/gi, '/');
+  }
+}
+function decodeEncodedHtmlFragments(value) {
+  const map = {
+    '%09': '\t', '%0A': '\n', '%0D': '\r', '%20': ' ', '%22': '"', '%27': "'",
+    '%2C': ',', '%2F': '/', '%3A': ':', '%3B': ';', '%3C': '<', '%3D': '=', '%3E': '>',
+  };
+  return String(value || '').replace(/%(?:09|0A|0D|20|22|27|2C|2F|3A|3B|3C|3D|3E)/gi, m => map[m.toUpperCase()] || m);
+}
+function stripTags(value) {
+  return String(value || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+}
+function repairEncodedInternalAnchors(html = '') {
+  return String(html).replace(
+    /<a\s+href=(["'])(https?:\/\/(?:www\.)?rogersense\.com)?(\/(?:products|cases|blog)\/[A-Za-z0-9._~%-]+(?:\/[A-Za-z0-9._~%-]+)*)%(?:22|27)%3E([\s\S]*?)(?:%3C%2Fa%3E|<\/a>)([^<"']*)/gi,
+    (_m, _quote, origin, pathValue, label, tail) => {
+      const href = origin ? `https://rogersense.com${pathValue}` : pathValue;
+      const cleanLabel = escapeHtml(stripTags(decodePercentText(label)) || pathValue.split('/').pop() || 'link');
+      return `<a href="${href}">${cleanLabel}</a>${decodePercentText(tail)}`;
+    }
+  );
+}
 function cleanInternalHrefValue(value) {
   const raw = String(value || '').trim();
   const origin = raw.match(/^https?:\/\/(?:www\.)?rogersense\.com/i)?.[0] || '';
@@ -246,7 +275,7 @@ function cleanInternalLinks(html = '') {
     shipping: '/shipping', gdpr: '/gdpr', login: '/login', dashboard: '/dashboard',
     reset: '/reset', track: '/track', admin: '/admin'
   };
-  let out = String(html);
+  let out = repairEncodedInternalAnchors(decodeEncodedHtmlFragments(html));
   out = out.replace(/https:\/\/rogersense\.com\/product\.html\?slug=([^"'&<>\s]+)/g, (_, slug) => `https://rogersense.com/products/${encodeURIComponent(safeDecode(slug))}`);
   out = out.replace(/https:\/\/rogersense\.com\/case-detail\.html\?slug=([^"'&<>\s]+)/g, (_, slug) => `https://rogersense.com/cases/${encodeURIComponent(safeDecode(slug))}`);
   out = out.replace(/https:\/\/rogersense\.com\/blog-post\.html\?slug=([^"'&<>\s]+)/g, (_, slug) => `https://rogersense.com/blog/${encodeURIComponent(safeDecode(slug))}`);

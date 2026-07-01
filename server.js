@@ -247,10 +247,23 @@ function genQuoteNo() {
 }
 const jp = (v, dflt) => { try { return JSON.parse(v); } catch { return dflt; } };
 const escHtml = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
-const stripHtml = s => String(s ?? '').replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+const decodeTextEntities = s => String(s ?? '')
+  .replace(/&nbsp;/gi, ' ')
+  .replace(/&minus;/gi, '-')
+  .replace(/&amp;/gi, '&')
+  .replace(/&quot;/gi, '"')
+  .replace(/&#39;|&apos;/gi, "'");
+const stripHtml = s => decodeTextEntities(String(s ?? '').replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
 const truncate = (s, n = 155) => {
   const text = stripHtml(s);
   return text.length > n ? text.slice(0, n - 1).trimEnd() + '…' : text;
+};
+const seoTitle = (s, max = 68) => {
+  const suffix = ' — Rogersense';
+  const text = stripHtml(s);
+  if (text.length + suffix.length <= max) return `${text}${suffix}`;
+  const head = text.slice(0, Math.max(20, max - suffix.length - 1)).replace(/\s+\S*$/, '').trim();
+  return `${head || text.slice(0, max - suffix.length - 1).trim()}…${suffix}`;
 };
 const CLEAN_PAGE_PATHS = {
   index: '/',
@@ -301,6 +314,29 @@ function cleanLegacyPath(value) {
   }
   return out;
 }
+function decodePercentText(value) {
+  const text = String(value || '');
+  try { return decodeURIComponent(text); } catch {
+    return text.replace(/%20/gi, ' ').replace(/%26/gi, '&').replace(/%2F/gi, '/');
+  }
+}
+function decodeEncodedHtmlFragments(value) {
+  const map = {
+    '%09': '\t', '%0A': '\n', '%0D': '\r', '%20': ' ', '%22': '"', '%27': "'",
+    '%2C': ',', '%2F': '/', '%3A': ':', '%3B': ';', '%3C': '<', '%3D': '=', '%3E': '>',
+  };
+  return String(value || '').replace(/%(?:09|0A|0D|20|22|27|2C|2F|3A|3B|3C|3D|3E)/gi, m => map[m.toUpperCase()] || m);
+}
+function repairEncodedInternalAnchors(html) {
+  return String(html || '').replace(
+    /<a\s+href=(["'])(https?:\/\/(?:www\.)?rogersense\.com)?(\/(?:products|cases|blog)\/[A-Za-z0-9._~%-]+(?:\/[A-Za-z0-9._~%-]+)*)%(?:22|27)%3E([\s\S]*?)(?:%3C%2Fa%3E|<\/a>)([^<"']*)/gi,
+    (_m, _quote, origin, pathValue, label, tail) => {
+      const href = origin ? `${CANONICAL_SITE_URL}${pathValue}` : pathValue;
+      const cleanLabel = escHtml(stripHtml(decodePercentText(label))) || escHtml(pathValue.split('/').pop() || 'link');
+      return `<a href="${href}">${cleanLabel}</a>${decodePercentText(tail)}`;
+    }
+  );
+}
 function cleanInternalHrefValue(value) {
   const raw = String(value || '').trim();
   const origin = raw.match(/^https?:\/\/(?:www\.)?rogersense\.com/i)?.[0] || '';
@@ -315,7 +351,7 @@ function cleanInternalHrefAttr(match, prefix, quote, href) {
   return cleanHref ? `${prefix}${quote}${cleanHref}${quote}` : match;
 }
 function cleanInternalLinks(html) {
-  return cleanLegacyPath(html)
+  return repairEncodedInternalAnchors(cleanLegacyPath(decodeEncodedHtmlFragments(html)))
     .replace(/(["'=])product\.html\?slug=([^"'&<>\s]+)/g, (_, q, slug) => `${q}${productPath(safeDecode(slug))}`)
     .replace(/(["'=])case-detail\.html\?slug=([^"'&<>\s]+)/g, (_, q, slug) => `${q}${casePath(safeDecode(slug))}`)
     .replace(/(["'=])blog-post\.html\?slug=([^"'&<>\s]+)/g, (_, q, slug) => `${q}${blogPath(safeDecode(slug))}`)
@@ -1717,7 +1753,7 @@ async function getPublishedPostRow(slug) {
   const cached = mcGet(ckey);
   if (cached) return cached;
   const { rows } = await db.query(`SELECT * FROM posts WHERE slug = ? AND status = 'published'`, [cleanSlug]);
-  const post = rows[0] || null;
+  const post = rows[0] ? shapePost(rows[0]) : null;
   if (post) mcSet(ckey, post, PUBLIC_POST_DETAIL_CACHE_MS);
   return post;
 }
@@ -1975,7 +2011,7 @@ function blogListCard(p) {
     <div class="post-cover">${p.cover_url ? `<img src="${escHtml(p.cover_url)}" alt="${escHtml(p.title)}" loading="lazy"/>` : ''}</div>
     <div class="post-body">
       <span class="post-meta">${date ? new Date(date).toDateString() : ''}${p.author ? ' · ' + escHtml(p.author) : ''}</span>
-      <span class="post-title">${escHtml(p.title)}</span>
+      <h2 class="post-title">${escHtml(p.title)}</h2>
       <span class="post-excerpt">${escHtml(compactListText(p.excerpt || p.title, 155))}</span>
       <span class="case-link">Read →</span>
     </div>
@@ -2071,7 +2107,7 @@ async function renderCasesPage(req, res, next) {
     const canonicalPath = category ? `/cases/category/${encodeURIComponent(category)}` : pagePath('cases');
     const title = category
       ? `${category} engineering case studies — Rogersense`
-      : 'Engineering Case Studies for Embedded, LiDAR and Industrial Systems — Rogersense';
+      : 'Embedded, LiDAR and Industrial Case Studies — Rogersense';
     const description = 'Rogersense case studies covering embedded hardware, firmware, LiDAR navigation, Bluetooth relay control and industrial product delivery.';
     html = injectSeoHead(html, {
       title,
@@ -2174,10 +2210,10 @@ app.get('/products/:slug', async (req, res, next) => {
       </div>
       <div class="tabs">
         <div class="tabs-nav"><button class="active" data-tab="desc">Description</button><button data-tab="reviews" id="reviews">Reviews (${escHtml(p.rating_count || 0)})</button></div>
-        <div class="tab-panel active" id="panel-desc"><div class="prose">${richTextHtml(p.description, p.summary)}</div></div>
+        <div class="tab-panel active" id="panel-desc"><div class="prose"><h2>Product overview</h2>${richTextHtml(p.description, p.summary)}</div></div>
         <div class="tab-panel" id="panel-reviews"></div>
       </div>`;
-    html = injectSeoHead(html, { title: `${p.name} — Rogersense`, description, canonical, image, type: 'product', ld });
+    html = injectSeoHead(html, { title: seoTitle(p.name), description, canonical, image, type: 'product', ld });
     html = html.replace(/<span id="crumb-name">[\s\S]*?<\/span>/, `<span id="crumb-name">${escHtml(p.name)}</span>`);
     html = html.replace(/<div id="pdp-root">[\s\S]*?<\/div>/, `<div id="pdp-root">${body}</div>`);
     publicCache(res, { browser: 300, edge: 1800 });
@@ -2230,7 +2266,7 @@ app.get('/cases/:slug', async (req, res, next) => {
         : ''}
       <div class="case-study" style="font-size:1rem;line-height:1.8;color:var(--color-text);max-width:680px;">${caseStudyHtml(c.description)}</div>
       ${images.length > 1 ? `<h3 style="font-family:var(--font-sans);font-size:1rem;font-weight:600;margin:32px 0 4px;">Photos</h3><div class="gallery" id="gallery">${images.map(img => `<img src="${escHtml(img)}" alt="${escHtml(c.title)}" loading="lazy"/>`).join('')}</div>` : ''}`;
-    html = injectSeoHead(html, { title: `${c.title} — Rogersense`, description, canonical, image, type: 'article', ld });
+    html = injectSeoHead(html, { title: seoTitle(c.title), description, canonical, image, type: 'article', ld });
     html = html.replace(/<div id="loading"[^>]*>[\s\S]*?<\/div>/, '<div id="loading" style="display:none;"></div>');
     html = html.replace(/<div id="case-content"[^>]*>[\s\S]*?<\/div>/, `<div id="case-content" style="display:block;" data-ssr="1">${body}</div>`);
     publicCache(res, { browser: 300, edge: 1800 });
@@ -2262,7 +2298,8 @@ app.get('/blog/:slug', async (req, res, next) => {
     const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
     const tags = jp(p.tags, []);
     const url = `${CANONICAL_SITE_URL}${blogPath(slug)}`;
-    const desc = esc(p.excerpt || p.title);
+    const titleTag = esc(seoTitle(p.title));
+    const desc = esc(truncate(p.excerpt || p.title));
     const cover = p.cover_url ? (p.cover_url.startsWith('http') ? p.cover_url : CANONICAL_SITE_URL + p.cover_url) : '';
     const date = p.published_at || p.created_at;
     const ld = {
@@ -2273,7 +2310,7 @@ app.get('/blog/:slug', async (req, res, next) => {
       mainEntityOfPage: url, ...(cover ? { image: [cover] } : {}), ...(tags.length ? { keywords: tags.join(', ') } : {}),
     };
     const head = [
-      `<title>${esc(p.title)} — Rogersense</title>`,
+      `<title>${titleTag}</title>`,
       `<meta name="description" content="${desc}"/>`,
       `<link rel="canonical" href="${url}"/>`,
       `<meta property="og:type" content="article"/>`,

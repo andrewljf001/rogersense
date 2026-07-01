@@ -6,7 +6,7 @@
   <title>Embedded Hardware, LiDAR and Product Engineering Blog — Rogersense</title>
   <meta name="description" content="Engineering articles from Rogersense on embedded hardware, LiDAR, industrial controls, BOM risk, product validation and manufacturing-ready development."/>
   <link rel="canonical" href="https://rogersense.com/blog"/>
-  <link rel="stylesheet" href="/assets/style.css?v=20260701a"/>
+  <link rel="stylesheet" href="/assets/style.css?v=20260701c"/>
   <style>
     .blog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px;}
     .post-card{display:flex;flex-direction:column;background:var(--color-bg);border:1px solid var(--color-border);border-radius:12px;overflow:hidden;transition:box-shadow .2s,transform .2s;text-decoration:none;color:inherit;}
@@ -15,7 +15,7 @@
     .post-cover img{width:100%;height:100%;object-fit:cover;}
     .post-body{padding:18px;display:flex;flex-direction:column;gap:8px;flex:1;}
     .post-meta{font-size:.72rem;color:var(--color-text-light);}
-    .post-title{font-size:1.08rem;font-weight:600;line-height:1.35;}
+    .post-title{font-size:1.08rem;font-weight:600;line-height:1.35;margin:0;}
     .post-excerpt{font-size:.875rem;color:var(--color-text-muted);flex:1;}
   </style>
 <!-- Google tag (gtag.js) -->
@@ -106,7 +106,7 @@
   </div>
 </footer>
 
-<script src="/assets/main.js?v=20260701a"></script>
+<script src="/assets/main.js?v=20260701c"></script>
 <script>
   const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   function card(p) {
@@ -115,7 +115,7 @@
       <div class="post-cover">${p.cover_url ? `<img src="${esc(p.cover_url)}" alt="${esc(p.title)}" loading="lazy"/>` : ''}</div>
       <div class="post-body">
         <span class="post-meta">${date ? formatDate(date) : ''}${p.author ? ' · ' + esc(p.author) : ''}</span>
-        <span class="post-title">${esc(p.title)}</span>
+        <h2 class="post-title">${esc(p.title)}</h2>
         <span class="post-excerpt">${esc(p.excerpt || '')}</span>
         <span class="case-link">Read →</span>
       </div></a>`;
